@@ -1,0 +1,7 @@
+**/arch/*
+*TextIndex.txt
+*TextExtract.txt
+.fslock
+log
+gwiki/admin
+gwiki/tmp

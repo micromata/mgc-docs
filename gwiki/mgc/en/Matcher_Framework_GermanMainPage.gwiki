@@ -1,0 +1,104 @@
+{pageintro}
+
+Innerhalb von Genome wird an vielen Stellen Regeln hinterlegt, die Rechte prüfen, URLs zu Aktionen mappen, Filter definieren, etc.
+Für diese Regeln wird das Matcher-Framework verwendet.
+Aber für das Finden und Filtern von Klassen, Fields, bzw. beliebigen Objekten kann das Matcherframework verwendet werden.
+{pageintro}
+
+h2. Beteiligte Klassen
+
+Matcher implementieren das {{Interface Matcher<T>}}, wobei {{T} das zu matchende Objekt ist.
+Matcher werden über eine Implementierung von {{MatcherFactory<T>}} erzeugt.
+
+Eine Factory erzeugt aus einem Regelstring einen Matcher.
+
+Die Intefaces und einige Implementierungen liegen im Package de.micromata.genome.util.matcher.
+Standard-Matcher
+SimpleWildcardMatcherFactory
+
+SimpleWildcardMatcherFactory erzeugt Matcher, der nicht nur optimierte Wildcartoperationen erstellt,
+sondern auch einige spezielle Matcher zur Verfügung stellt.
+
+{{! <MatcherRule>}}: Negiert folgende MatcherRule
+{{~ <regexp>}}: Erzeugt einen Regexp
+{{${groovycode}}}: Matched gegen einen Groovy-Code.
+{{<wildcartexpression>}}: Matched gegen einen Wildcart-Ausdruck.
+
+Bei einer wildcartexpression wird intern noch optimiert, so
+dass aus üblichen Pattern optimierte Matcher erzeugt werden.
+
+wildcartexpression:
+string: (ohne ?*): EqualsMatcher
+{{*}}: AnyMatcher
+{{*string}}: EndsWithMatcher
+{{string*}}: StartsWithMatcher
+{{*string*}}: ContainsMatcher
+ansonsten: WildcartMatcher
+BooleanListMatcher
+
+Eine BooleanListMatcher ist eine Liste Matcher, wobei noch optional
+mittels {{+}} oder {{-}} Ein- oder Ausschluss definiert werden kann.
+Bei einem BooleanListMatcher kann man noch angeben, welche MatcherFactory
+er für die die einzlenen Elemente verwenden soll. Üblicherweise ist
+dies die SimpleWildcardMatcherFactory.
+
+Bei der Auswertung des Ausdrucks:
+{{+Rule1,-Rule2,Rule3}}
+
+wird von links nach rechts ausgewertet. Dabei wird jede Regel ausgewertet und wenn
+sie matched, ist das Matchergebnis abhängig von + oder Minus. Beginnt ein Regel
+nicht mit {{+}} oder minus wird von {{+}} ausgegangen.
+
+Beispiel für einen Match Filter:
+{{+*,-/abc/*,+*.gspt}}
+
+Alle Pfade, ausser er beginnt mit /abc/ jedoch mit /abc/*.gspt.
+Erweiterte Syntax
+
+Die Syntax versteht auch noch Gruppierung und einfache boolsche Operation:
+{{a || b}}
+
+Matched a oder b
+{{(a* && *b) || (x* && *z)}}
+
+Gruppierte Logische Operationen
+
+
+Mit dem LogicalMatcherFactory kann man auch für die Logischen Operatoren || und && auch or und and verwenden. Das ist insbesondere hilfreich, wenn man Ausdrücke in XML-Attributen schreiben möchte und sich das Escaping von & sparen möchte
+GroovyMatcher (Seit 1.3.0)
+
+
+Der Ausdruck innerhalb eines Groovy-Matcher (zwischen ${}) muss nicht mehr so umständlich geqoutet werden, da durch die Implementation des Interfaces MatcherTokenFactory man nicht mehr nur ein Element nach String parsen kann, sondern die Tokens des äußeren MatcherFactory auswerten kann.
+
+Dem GroovyMatcherFactory kann auch functionProvider (Eine Bean-Klasse) mitgegeben werden. Die Funktionen der Bean-Klasse können direkt in Groovy verwendet werden:
+{code}
+public class MyClassProvider
+  {
+    String matchAgainst;
+    public MyClassProvider(String matchAgainst)
+    {
+      this.matchAgainst = matchAgainst;
+    }
+    public int myLength(String l)
+    {
+      return l.length();
+    }
+    public int thisLength()
+    {
+      return matchAgainst.length();
+    }
+  }
+ 
+BooleanListRulesFactory<String> ret = new BooleanListRulesFactory<String>();
+ret.getTokenFactories().add(0, new GroovyMatcherFactory<String>(MyClassProvider.class));
+//Ausdruck nutzt Funktionen von MyClassProvider
+ret.createMatcher("${thisLength() == 3 or myLength('bla') == 4}")
+{code}
+ 
+CachedMatcherFactory (Seit 1.3.0)
+
+
+Die CachedMatcherFactory kann man verwenden, um das Parsen von wiederholenden Matcherausdrücke zu beschleunigen. Beispiel siehe auch in CachedMatcherFactoryTest.
+Escaping
+
+Soll einer der Operatoren selbst im Matching-Ausdruck stehen, muss das Zeichen mit einem Backslash gequotet werden.

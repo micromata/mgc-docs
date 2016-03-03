@@ -1,0 +1,31 @@
+{pageintro}
+de.micromata.mgc.common contains some basic functions, which are commonly used.
+{pageintro}
+
+
+h1. PrivateBeanUtils
+Want to read/write fields or invoke methods - if public or not - not dealing with complex Exceptionhandling?
+PrivateBeanUtils is your friend.
+
+h1. Matcher Framework
+
+See [mgc/en/Matcher_Framework_German]
+
+Matchers are framework to create filters to varios objects.
+
+
+The base interface is
+{{de.micromata.genome.util.matcher.Matcher<T>}}, where T is the object to matched against
+
+Matchers can be either created explizit composing in java or via a  {{de.micromata.genome.util.matcher.MatcherFactory<T>}}.
+
+To understand Matchers here some samples.
+{code}
+ PrivateBeanUtils.copyInstanceProperties(JpaTriggerJobDO.class, toupdate, jjob,
+            CommonMatchers.and(FieldMatchers.hasNotModifier(Modifier.STATIC),
+                FieldMatchers.fieldName("+*,-createdAt,-createdBy,-updateCounter,-pk,-attributes")));
+{code}
+
+h1. LocalSettings und LocalSettingsEnv
+LocalSettings and LocalSettingsEnv is a very easy to use but very powerfull configuration via simple properties files.
+It has also integrates the ability to declare DataSources, Mailsessions and JNDI Elements.
