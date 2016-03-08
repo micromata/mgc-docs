@@ -1,0 +1,21 @@
+{pageintro}
+Store and restore all table contents of a persistence context into/from an XML file.
+{pageintro}
+
+h1. Sample
+{code}
+    JpaXmlDumpService xmlDumpService = new JpaXmlDumpServiceImpl();
+    XmlDumpEntityMgrFactory emfac = XmlDumpEntityMgrFactory.get();
+    // do some inserts
+    // ...
+
+    File file = new File("target/db-dump1.xml");
+    // dump all tables of the persistence context into an xml file
+    xmlDumpService.dumpToXml(emfac, file);
+
+    // empty all tables of the persistence context
+    emfac.getJpaSchemaService().clearDatabase();
+    // load dump back into persistence context
+    xmlDumpService.restoreDb(emfac, file, RestoreMode.InsertAll);
+  }
+{code}

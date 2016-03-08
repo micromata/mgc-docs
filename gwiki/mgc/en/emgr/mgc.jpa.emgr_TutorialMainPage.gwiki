@@ -1,0 +1,100 @@
+{pageintro}
+Small to tutorial how to create an persistence context.
+{pageintro}
+
+h1. Step 1. Create an persistence.xml
+In your project create a standard JPA persistence.xml at the localation {{src/main/resources/META-INF}}.
+
+{code}
+<?xml version='1.0' encoding='UTF-8'?>
+<persistence xmlns='http://java.sun.com/xml/ns/persistence' xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'
+  xsi:schemaLocation='http://java.sun.com/xml/ns/persistence http://java.sun.com/xml/ns/persistence/persistence_1_0.xsd'
+  version='1.0'>
+<persistence-unit name="de.micromata.genome.jpa.test" transaction-type="RESOURCE_LOCAL">
+    <provider>org.hibernate.ejb.HibernatePersistence</provider>
+    <non-jta-data-source>java:/comp/env/genome/jdbc/dsWeb</non-jta-data-source>
+    <exclude-unlisted-classes>false</exclude-unlisted-classes>
+  </persistence-unit>
+</persistence>
+{code}
+
+- {{de.micromata.genome.jpa.test}}: is the name of the persistence context. This has to be unique in your project
+- {{java:/comp/env/genome/jdbc/dsWeb}}: Refers to the JNDI name for the DataSource. You can use LocalSettings to declare datasource and JNDI context.
+- {{<exclude-unlisted-classes>false</exclude-unlisted-classes>}}: Scan all classes. Alternativelly list the entity classes.
+
+h1. Step 2. Create your EmgrFactory
+
+{code}
+
+public class JpaTestEntMgrFactory extends EmgrFactory<JpaTestEntMgr>
+{
+  // An EmgrFactory has to be singlton
+  static JpaTestEntMgrFactory INSTANCE;
+
+  // because this method is synchronized hold the factory in you service
+  public static synchronized JpaTestEntMgrFactory get()
+  {
+    if (INSTANCE != null) {
+      return INSTANCE;
+    }
+    INSTANCE = new JpaTestEntMgrFactory();
+    return INSTANCE;
+  }
+
+  protected JpaTestEntMgrFactory()
+  {
+    // the name of the persistence context
+    super("de.micromata.genome.jpa.test");
+  }
+
+  /**
+   * Create an IEmgr instance. If you don't want to create your own type, you can also use DefaultEmgr {@inheritDoc}
+   *
+   */
+  @Override
+  protected JpaTestEntMgr createEmgr(EntityManager entitManager, EmgrTx<JpaTestEntMgr> emgrTx)
+  {
+    return new JpaTestEntMgr(entitManager, this, emgrTx);
+  }
+}
+{code}
+
+h1. Step 3 Use it
+
+Yes, that is it basically.
+{code}
+public class JpaDemoTest extends MgcTestCase
+{
+  static JpaTestEntMgrFactory emfac = JpaTestEntMgrFactory.get();
+
+  @Test
+  public void testSelectComplex()
+  {
+    emfac.tx().go(emgr -> {
+      return emgr.createQuery("delete from " + GenomeJpaTestTableDO.class.getName() + " e").executeUpdate();
+    });
+    GenomeJpaTestTableDO table = new GenomeJpaTestTableDO();
+    table.setFirstName("Roger");
+    // insert the entity. 
+    Long pk = emfac.tx().go((emgr) -> {
+      return emgr.insertDetached(table);
+    });
+    Assert.assertNotNull(pk);
+    // select the entity by pk
+    GenomeJpaTestTableDO readed = emfac.notx().go((emgr) -> emgr.selectByPkAttached(GenomeJpaTestTableDO.class, pk));
+    Assert.assertNotNull(readed);
+
+    // select entities by criterias
+    List<GenomeJpaTestTableDO> list = emfac.notx().go((emgr) -> {
+      return emgr.selectDetached(GenomeJpaTestTableDO.class,
+          "select e from " + GenomeJpaTestTableDO.class.getName() + " e where e.firstName = :firstName",
+          "firstName", "Roger");
+    });
+    Assert.assertNotNull(list);
+    Assert.assertEquals(1, list.size());
+  }
+}
+{code}
+
+h1. Further Readings
+[mgc/en/mgc.jpa.emgr_Transaction]

@@ -1,0 +1,120 @@
+{pageintro}
+How to setup a Launcher application
+{pageintro}
+
+{info}
+A small example is provided in [mgc/en/de.micromata.mgc.javafx.launcher.sample].
+{info}
+
+h2. Create an pom.xml
+The Launcher uses Spring boot plugin to create an fat jar (single jar including all other jars).
+Therefore you have to include the maven pluings:
+{code}
+ <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <version>2.6</version>
+        <configuration>
+          <archive>
+            <manifestEntries>
+              <MgcAppName>JFX Launcher Sample</MgcAppName>
+              <MgcCopyright>Copyright 2016 by Micromata</MgcCopyright>
+              <MgcVersion>${project.version}</MgcVersion>
+              <MgcLicense>Apache 2.0</MgcLicense>
+              <MgcDescription>Sample Launcher</MgcDescription>
+              <MgcHomeUrl>http://labs.micromata.de</MgcHomeUrl>
+              <MgcLargLogoPath>/style/gwikiLogo.png</MgcLargLogoPath>
+              <mainClass>${start-class}</mainClass>
+              <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+            </manifestEntries>
+          </archive>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-maven-plugin</artifactId>
+        <configuration>
+          <mainClass>${start-class}</mainClass>
+          <layout>ZIP</layout>
+        </configuration>
+      </plugin>
+
+      <!-- Support our own plugin -->
+      <plugin>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-maven-plugin</artifactId>
+        <version>${spring-boot.version}</version>
+        <executions>
+          <execution>
+            <goals>
+              <goal>repackage</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <mainClass>${start-class}</mainClass>
+        </configuration>
+      </plugin>
+      
+    </plugins>
+  </build>
+{code}
+
+For more information look at spring boot.
+
+Here some sample dependencies
+{code}
+<dependencies>
+    <!-- The Launcher itself -->
+    <dependency>
+      <groupId>de.micromata.mgc</groupId>
+      <artifactId>de.micromata.mgc.javafx.launcher</artifactId>
+      <version>${mgc.version}</version>
+    </dependency>
+    <!-- we want to have the jetty sample as application.
+         Replace this with your own application or delete it, if
+         you implement the application in this project. -->
+    <dependency>
+      <groupId>de.micromata.mgc</groupId>
+      <artifactId>de.micromata.mgc.jettystarter.sample</artifactId>
+      <version>${mgc.version}</version>
+    </dependency>
+    <!-- We want mgc loging.
+         Delete this, if you don't want mgc logging
+     -->
+    <dependency>
+      <groupId>de.micromata.mgc</groupId>
+      <artifactId>de.micromata.mgc.jpa.logging</artifactId>
+      <version>${mgc.version}</version>
+    </dependency>
+    <!--  A small database.
+          Delete this, if you want another or none databases.
+          Databases can also put into the lib directory of the final fat jar. 
+    -->
+    <dependency>
+      <groupId>org.apache.derby</groupId>
+      <artifactId>derby</artifactId>
+      <version>${org.apache.derby.version}</version>
+    </dependency>
+  </dependencies>
+{code}
+
+
+
+
+h2. Adding additionally libraries to path
+Sometime jars cannot be wrapped into the applications fat jar, f.e. because of license issues. Another example are jdbc drivers.
+
+Create an application.properties file and put into your classpath:
+For example {{src/main/resource/application.properties}}
+{pre}
+# used by spring boot. 
+# all *.jar in given directory added to classpath
+loader.path=libs/
+{pre}
+Create an subdirectory {{libs}} relativ to the location of your fat jar/exe and put there your additinally jars, which will be automatically added to classpath.
+
+h2. Next
+Now implement the application: [mgc/en/launcher/devguide/mgc/en/launcher/devguide/mgc/en/launcher/devguide/2._Framework_Interfaces_and_Classes]

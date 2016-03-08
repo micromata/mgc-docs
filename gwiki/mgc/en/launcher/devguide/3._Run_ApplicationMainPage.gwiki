@@ -1,0 +1,38 @@
+{pageintro}
+Start and configure you application.
+{pageintro}
+
+h2. Build application
+Use 
+{{mvn install}}
+to build the application.
+In the subdirectory {{target}} you will find an jar file: {{de.micromata.mgc.javafx.launcher-2.1.0-SNAPSHOT.jar}} 
+{info}
+Concrete filename depends on name and version of your project.
+{info}
+
+h2. Start application
+Go to the directory (or copy the jar in another directory) and use type
+{{java -jar  de.micromata.mgc.javafx.launcher-2.1.0-SNAPSHOT.jar}}
+
+On windows you can also simple double click on the jar file. 
+!mgc/en/launcher/devguide/JFXLauncherSampleMainWindow.jpg!
+
+After clicking Start server button you may receive a message
+Application is not configured
+
+So you have to open the configuration dialog.
+
+!mgc/en/launcher/devguide/JettyConfigurationDialog.jpg!
+
+Check the configuration and save it.
+
+{info}
+Some firewalls has to be configured, that the server is allowed to listen to configured port.
+{info}
+
+Try again to start the server. 
+A message Jetty started should be shown in the log window.
+
+Click the Button Open Browser and a browser window with the Servlet message should be displayed.
+

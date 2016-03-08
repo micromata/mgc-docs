@@ -1,3 +1,54 @@
 {pageintro}
 Genome JPA EMGR is a wrapper to pure JPA with many convience Methods
 {pageintro}
+
+h1. Idea behind Genome EMGR
+In projects we want to use JPA, but on a lightweight basis. So we want to asume a full J2E container with all the infrastructure.
+The code written should be easy to understand and no magic with fumble around with dynamic proxies and byte code patching.
+
+A very import aspect is also a clear understanding about transaction. It should be clear, where transaction begins, and
+when it ends. A mayour flaw of hibernate mapping is to much magic, when and why database operations will be executed.
+
+In the past we often use String JDBC Template and IBatis. These are outdatet and give to weak support in mapping
+database to Java and in supporting varios database dialects.
+
+The Emgr-Framework is a compromize to use JPA Standards, but clean code and many additionally features, which
+is still missed in core JPA implementations.
+
+h1. First look:
+
+{code}
+static JpaTestEntMgrFactory emfac = JpaTestEntMgrFactory.get();
+
+  @Test
+  public void testSelectComplex()
+  {
+    emfac.tx().go(emgr -> {
+      return emgr.createQuery("delete from " + GenomeJpaTestTableDO.class.getName() + " e").executeUpdate();
+    });
+    GenomeJpaTestTableDO table = new GenomeJpaTestTableDO();
+    table.setFirstName("Roger");
+    // insert the entity. 
+    Long pk = emfac.tx().go((emgr) -> {
+      return emgr.insertDetached(table);
+    });
+    Assert.assertNotNull(pk);
+    // select the entity by pk
+    GenomeJpaTestTableDO readed = emfac.notx().go((emgr) -> emgr.selectByPkAttached(GenomeJpaTestTableDO.class, pk));
+    Assert.assertNotNull(readed);
+
+    // select entities by criterias
+    List<GenomeJpaTestTableDO> list = emfac.notx().go((emgr) -> {
+      return emgr.selectDetached(GenomeJpaTestTableDO.class,
+          "select e from " + GenomeJpaTestTableDO.class.getName() + " e where e.firstName = :firstName",
+          "firstName", "Roger");
+    });
+    Assert.assertNotNull(list);
+    Assert.assertEquals(1, list.size());
+  }
+
+{code}
+
+h1. Further readings
+
+{children:depth=2|sort=title|withPageIntro=true}

@@ -1,0 +1,59 @@
+{pageintro}
+How to handle Transaction with an EmgrFactory.
+{pageintro}
+h1. Basics
+
+All Database operations - even with no transaction - are wrapped into scope brackets. To execute queries to the database, you need a IEmgr instance. Only in such a a scope, you will obtain an instance of the IEmgr interface.
+
+{code}
+// transaction
+emfac.tx().go((emgr) -> {
+      // do stuff here with emgr
+      return null;
+    });
+
+// or no transaction
+emfac.notx().go((emgr) -> {
+      // do stuff here with emgr
+      return null;
+    });
+{code}
+
+Entity objects out this brackets doesn't exists as entity objects, but just as plain old java objects.
+
+h1. EmgrTx
+
+The Transaction context is represented by the EmgrTx, which is obtainable by the EmgrFactory with the methods tx() or notx().
+
+EmgrTx has folling methods to specify transaction:
+
+- requiresNew(): Starts a new transaction, event there is already on in caller stack.
+- requires(): Requires an existant transaction. If no transaction in the caller stack, a TransactionRequiredException will be thrown.
+- rollback(): At the end of the backet a rollback will be called.
+- readOnly(): Same as rollback()
+- timeOut(long timeout): set the timeout for the transaction
+
+with go(EmgrCallable<R, E> call) the transaction will be started and finished after call returns.
+
+h1. Samples
+{code}
+// rollback at the end 
+emfac.tx().rollback().go((emgr) -> {
+      GenomeJpaTestTableDO tdr = emgr.selectByPkAttached(GenomeJpaTestTableDO.class, td.getPk());
+      tdr.setFirstName("Rene");
+      emgr.update(tdr);
+      return null;
+    });
+
+// call in own transaction
+ emfac.tx().requiresNew().go((emgr) -> {
+      GenomeJpaTestTableDO d = new GenomeJpaTestTableDO();
+      d.setFirstName(name);
+      emgr.insert(d);
+      if (toThrow != null) {
+        throw toThrow;
+      }
+      return d;
+    });
+{code}
+

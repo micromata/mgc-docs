@@ -1,0 +1,175 @@
+{pageintro}
+Launcher works with some interfaces and classes, which has to be used or implemented.
+{pageintro}
+
+h2. The Main class {{SampleLauncherMain}}
+First you need a main class, which as entry point for you application.
+{code}
+/**
+ * Sample Main class to start the application.
+ * 
+ * @author Roger Rene Kommer (r.kommer.extern@micromata.de)
+ *
+ */
+public class SampleLauncherMain extends MgcLauncher<SampleLocalSettingsConfigModel>
+{
+  /**
+   * Launch via standard java main.
+   * 
+   * @param args passed from command line.
+   */
+  public static void main(String[] args)
+  {
+    SampleLauncherMain el = new SampleLauncherMain();
+    el.launch(args);
+  }
+
+  public SampleLauncherMain()
+  {
+    // configure the Launcher with application and the main JavaFX window.
+    super(new SampleLauncherApplication(), (Class) GenericMainWindow.class);
+  }
+}
+{code}
+
+h2. The application class {{SampleLauncherApplication}}
+The application class has to implement the interface {{MgcApplication}}. In the sample we extends the class {{MgcApplicationWithJettyApplication}}, which already implements a jetty.
+
+An {{MgcApplication}} has basically following responsibilities:
+- Start and stop the application
+- Holds, load and store an configuration
+
+{code}
+/**
+ * Application with a embedded jetty
+ * 
+ * @author Roger Rene Kommer (r.kommer.extern@micromata.de)
+ *
+ */
+public class SampleLauncherApplication extends MgcApplicationWithJettyApplication<SampleLocalSettingsConfigModel>
+{
+  public SampleLauncherApplication()
+  {
+    super();
+    // configure the translation 
+    I18NTranslationProvider provider = new DefaultWarnI18NTranslationProvider(new PlaceholderTranslationProvider(
+        new I18NTranslationProviderImpl(I18NTranslations.systemDefaultLocaleProvider(),
+            new ChainedResourceBundleTranslationResolver("mgclauncher", "mgcapp", "mgcjetty"))));
+    setTranslateService(provider);
+  }
+
+  /**
+   * Provides the configuration model.
+   * 
+   * {@inheritDoc}
+   *
+   */
+  @Override
+  protected SampleLocalSettingsConfigModel newModel()
+  {
+    return new SampleLocalSettingsConfigModel();
+  }
+
+  /**
+   * Create a jetty with deployed war or exlicite servlets.
+   * 
+   * {@inheritDoc}
+   *
+   */
+  @Override
+  protected JettyServer newJettyServer(JettyConfigModel cfg)
+  {
+    SampleJettyServer ret = new SampleJettyServer();
+    ret.initJetty(cfg);
+    return ret;
+  }
+}
+{code}
+h2. The applications configuration {{SampleLocalSettingsConfigModel }}
+A {{LocalSettingsConfigModel}} model holds the applications configuration, can be loaded and stored into a localsettings and can be validated.
+
+Standard application components - like a jetty, datasources, etc.pp - provides standard configuration models. If your configuration extends the class {{AbstractCompositLocalSettingsConfigModel}} it is sufficient to make the used configuration parts a field member of your configuration class.
+
+{code}
+/**
+ * The configuration model.
+ * 
+ * @author Roger Rene Kommer (r.kommer.extern@micromata.de)
+ *
+ */
+public class SampleLocalSettingsConfigModel extends AbstractCompositLocalSettingsConfigModel
+{
+  /**
+   * want to habe a launcher configuration.
+   */
+  private LauncherLocalSettingsConfigModel launcherConfig = new LauncherLocalSettingsConfigModel();
+  /**
+   * Configuration for the jetty itself.
+   */
+  private JettyConfigModel jettyConfig = new JettyConfigModel();
+
+  /**
+   * We want to make useage of the MGC Logging.
+   */
+  private LsLoggingLocalSettingsConfigModel loggerConfig = new LsLoggingLocalSettingsConfigModel();
+  /**
+   * Embededd log4j configuration inside the launchers configuration dialog.
+   */
+  private AbstractTextConfigFileConfigModel log4jConfig = new AbstractTextConfigFileConfigModel("Log4J",
+      "log4j.properties", Charsets.ISO_8859_1);
+}
+{code}
+
+h2. The Sample Jetty {{SampleJettyServer}}
+The {{JettyServer}} provides an embedded jetty. The standard configuration {{JettyConfigModel}} holds basic configuration - like ports, etc.
+
+{code}
+/**
+ * Minimal Jetty Server sample.
+ * 
+ * @author Roger Rene Kommer (r.kommer.extern@micromata.de)
+ *
+ */
+public class SampleJettyServer extends JettyServer
+{
+
+  public SampleJettyServer()
+  {
+    super();
+  }
+
+  @Override
+  protected ServletContextHandler createContextHandler(JettyConfigModel config)
+  {
+    ServletContextHandler sch = new ServletContextHandler();
+    // just one hello world servlet.
+    sch.addServlet(SampleServlet.class.getName(), "/");
+    return sch;
+  }
+
+}
+{code}
+
+h2. Hello world servlet {{SampleServlet}}
+
+{code}
+/**
+ * Hello world servlet.
+ * 
+ * @author Roger Rene Kommer (r.kommer.extern@micromata.de)
+ *
+ */
+public class SampleServlet extends HttpServlet
+{
+  @Override
+  protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException
+  {
+    resp.getWriter().append("Hello from Sample Jetty");
+  }
+}
+{code}
+
+h2. Next Step
+You are ready with coding!
+Now Start the application: [mgc/en/launcher/devguide/3._Run_Application]
+
