@@ -1,0 +1,186 @@
+{pageintro}
+You can create own Configuration Models and provide Tabs for the Launcher configuration dialog.  
+
+{pageintro}
+ 
+
+{toc} 
+
+h2. Create Configuration Model
+First create a class for your Model.
+
+{code:lang=java}
+/**
+ * A simple configuration model
+ * 
+ * @author Roger Rene Kommer (r.kommer.extern@micromata.de)
+ *
+ */
+public class SampleConfigModel extends AbstractLocalSettingsConfigModel
+{
+  @ALocalSettingsPath(comment = "A Sample configuration value")
+  private String myValue;
+
+  /**
+   * Build property names with given prefix.
+   * 
+   * In this case sample.launcher.myValue.
+   * 
+   * {@inheritDoc}
+   *
+   */
+  @Override
+  public String getKeyPrefix()
+  {
+
+    return "sample.launcher";
+  }
+
+  /**
+   * Check if configuration is valid.
+   * 
+   * If an error will be added to ValContext, the application will not be started.
+   * 
+   * {@inheritDoc}
+   *
+   */
+  @Override
+  public void validate(ValContext ctx)
+  {
+    if (StringUtils.isBlank(myValue) == true) {
+      ctx.directError("myValue", "Please give a value");
+    }
+  }
+}
+{code}
+ 
+
+h2. Link into the Configuration
+In your Application configuration model, simple add the field with the new Model
+
+{code:lang=java}
+public class SampleLocalSettingsConfigModel extends AbstractCompositLocalSettingsConfigModel
+{
+  /**
+   * want to habe a launcher configuration.
+   */
+  private LauncherLocalSettingsConfigModel launcherConfig = new LauncherLocalSettingsConfigModel();
+...
+
+  private SampleConfigModel sampleConfig = new SampleConfigModel();
+}
+{code}
+ 
+
+h2. Create Configuration Dialog
+To enable editing the configuration, you have to create a Dialog panel.
+
+Therefore you need following steps.
+
+h3. Create a Dialog Controller
+{code:lang=java}
+public class SampleConfigTabController extends AbstractConfigTabController
+{
+  /**
+   * ModelGuiField: Map to SampleConfigModel.myField
+   */
+  @FXML
+  @ModelGuiField
+  private TextField myValue;
+
+  @Override
+  public String getTabTitle()
+  {
+    return "Sample";
+  }
+}
+{code}
+ 
+
+h3. Create Dialog with SceneBuilder
+The fxml File should located in your classpath under the fxml directory and should have the same name as your controller classname (without package name).
+
+In this case no further steps are needed to locate the fxml file.
+
+!../../../../../../../../mgc/en/launcher/devguide/SampleConfigDialogFileLayout.png|class=weditimg!
+
+ 
+
+Edit with SceneBuilder:
+
+ 
+
+!../../../../../../../../../mgc/en/launcher/devguide/SampleTabSceneBuilder.png|class=weditimg!
+
+ Put the class name of the controller in the corresponding field:
+
+!../../../../../../../../mgc/en/launcher/devguide/SampleControllerSceneBuilder1.png|class=weditimg!
+
+ 
+
+Mark the text field and put the fxid corresponding to the field name in your Java controller class:
+
+ 
+
+!../../../../mgc/en/launcher/devguide/SampleConfigDialogMyValueField.png|class=weditimg!
+
+ 
+
+ 
+
+h3. Register the Dialog
+Now the Launcher has to find the Controller. Therefore the standard Java ServiceLoader is used.
+
+{code:lang=java}
+public class SampleConfigurationTabLoaderServiceImpl implements ConfigurationTabLoaderService
+{
+  @Override
+  public List getTabsByConfiguration(CastableLocalSettingsConfigModel configModel)
+  {
+    List ret = new ArrayList<>();
+    SampleConfigModel sampleConfig = configModel.castToForConfigDialog(SampleConfigModel.class);
+    if (sampleConfig != null) {
+      ret.add(new TabConfig(SampleConfigTabController.class, sampleConfig));
+    }
+    return ret;
+  }
+}
+{code}
+ 
+
+In your classpath create a simple textfile named {{/META\-INF/services/de.micromata.mgc.javafx.launcher.gui.generic.ConfigurationTabLoaderService }}and write your fully qualified class name {{de.micromata.mgc.javafx.launcher.sample.SampleConfigurationTabLoaderServiceImpl}}.
+
+ 
+
+h2. Test it
+ After start the Launcher will will see a Error, like this:
+
+!../../../../mgc/en/launcher/devguide/SampleConfigLauncherError.png|class=weditimg!
+
+ 
+
+That is OK, because the validation of the configuration missing a value.
+
+ Open the Configuration Dialog:
+
+!../../../mgc/en/launcher/devguide/SampleDialogTabView.png|class=weditimg!
+
+ You see your Text field, and also the text you give at {{@ALocalSettingsPath(comment = "A Sample configuration value")}} as tooltip.
+
+ 
+
+Save the the new Settings and look at the directory, where you started the Launcher.
+
+ 
+
+{pre}
+#A Sample configuration value
+sample.launcher.myValue=Hello
+{pre} 
+
+{todo}
+Continue here. 
+
+{todo}
+ 
+

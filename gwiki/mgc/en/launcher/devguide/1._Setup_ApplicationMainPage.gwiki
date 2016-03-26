@@ -1,15 +1,23 @@
 {pageintro}
 How to setup a Launcher application
+
 {pageintro}
+ 
 
 {info}
-A small example is provided in [mgc/en/de.micromata.mgc.javafx.launcher.sample].
+A small example is provided in [mgc/en/de.micromata.mgc.javafx.launcher.sample|mgc/en/de.micromata.mgc.javafx.launcher.sample].
+
 {info}
+ 
 
 h2. Create an pom.xml
 The Launcher uses Spring boot plugin to create an fat jar (single jar including all other jars).
-Therefore you have to include the maven pluings:
+ Therefore you have to include the maven pluings:
+
 {code}
+
+
+
  <build>
     <plugins>
       <plugin>
@@ -60,12 +68,17 @@ Therefore you have to include the maven pluings:
       
     </plugins>
   </build>
-{code}
 
-For more information look at spring boot.
+
+
+{code}For more information look at spring boot.
 
 Here some sample dependencies
+
 {code}
+
+
+
 <dependencies>
     <!-- The Launcher itself -->
     <dependency>
@@ -99,22 +112,33 @@ Here some sample dependencies
       <version>${org.apache.derby.version}</version>
     </dependency>
   </dependencies>
-{code}
 
 
 
+{code} 
 
 h2. Adding additionally libraries to path
 Sometime jars cannot be wrapped into the applications fat jar, f.e. because of license issues. Another example are jdbc drivers.
 
 Create an application.properties file and put into your classpath:
-For example {{src/main/resource/application.properties}}
+ For example {{src/main/resource/application.properties}}
+
 {pre}
+
+
+
 # used by spring boot. 
 # all *.jar in given directory added to classpath
 loader.path=libs/
+
+
+
 {pre}
-Create an subdirectory {{libs}} relativ to the location of your fat jar/exe and put there your additinally jars, which will be automatically added to classpath.
+ Create an subdirectory {{libs}} relativ to the location of your fat jar/exe and put there your additinally jars, which will be automatically added to classpath.
 
 h2. Next
-Now implement the application: [mgc/en/launcher/devguide/mgc/en/launcher/devguide/mgc/en/launcher/devguide/2._Framework_Interfaces_and_Classes]
+Now implement the application: [mgc/en/launcher/devguide/mgc/en/launcher/devguide/mgc/en/launcher/devguide/2._Framework_Interfaces_and_Classes|mgc/en/launcher/devguide/mgc/en/launcher/devguide/mgc/en/launcher/devguide/2._Framework_Interfaces_and_Classes]
+
+See next:
+
+{ScrollNextPrevPage}

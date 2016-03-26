@@ -1,10 +1,16 @@
 {pageintro}
 Launcher works with some interfaces and classes, which has to be used or implemented.
+
 {pageintro}
+ 
 
 h2. The Main class {{SampleLauncherMain}}
 First you need a main class, which as entry point for you application.
+
 {code}
+
+
+
 /**
  * Sample Main class to start the application.
  * 
@@ -30,16 +36,24 @@ public class SampleLauncherMain extends MgcLauncher<SampleLocalSettingsConfigMod
     super(new SampleLauncherApplication(), (Class) GenericMainWindow.class);
   }
 }
-{code}
+
+
+
+{code} 
 
 h2. The application class {{SampleLauncherApplication}}
 The application class has to implement the interface {{MgcApplication}}. In the sample we extends the class {{MgcApplicationWithJettyApplication}}, which already implements a jetty.
 
 An {{MgcApplication}} has basically following responsibilities:
+
 - Start and stop the application
 - Holds, load and store an configuration
+ 
 
 {code}
+
+
+
 /**
  * Application with a embedded jetty
  * 
@@ -84,13 +98,20 @@ public class SampleLauncherApplication extends MgcApplicationWithJettyApplicatio
     return ret;
   }
 }
-{code}
+
+
+
+{code} 
+
 h2. The applications configuration {{SampleLocalSettingsConfigModel }}
 A {{LocalSettingsConfigModel}} model holds the applications configuration, can be loaded and stored into a localsettings and can be validated.
 
-Standard application components - like a jetty, datasources, etc.pp - provides standard configuration models. If your configuration extends the class {{AbstractCompositLocalSettingsConfigModel}} it is sufficient to make the used configuration parts a field member of your configuration class.
+Standard application components \- like a jetty, datasources, etc.pp \- provides standard configuration models. If your configuration extends the class {{AbstractCompositLocalSettingsConfigModel}} it is sufficient to make the used configuration parts a field member of your configuration class.
 
 {code}
+
+
+
 /**
  * The configuration model.
  * 
@@ -118,12 +139,18 @@ public class SampleLocalSettingsConfigModel extends AbstractCompositLocalSetting
   private AbstractTextConfigFileConfigModel log4jConfig = new AbstractTextConfigFileConfigModel("Log4J",
       "log4j.properties", Charsets.ISO_8859_1);
 }
-{code}
+
+
+
+{code} 
 
 h2. The Sample Jetty {{SampleJettyServer}}
-The {{JettyServer}} provides an embedded jetty. The standard configuration {{JettyConfigModel}} holds basic configuration - like ports, etc.
+The {{JettyServer}} provides an embedded jetty. The standard configuration {{JettyConfigModel}} holds basic configuration \- like ports, etc.
 
 {code}
+
+
+
 /**
  * Minimal Jetty Server sample.
  * 
@@ -148,11 +175,16 @@ public class SampleJettyServer extends JettyServer
   }
 
 }
-{code}
+
+
+
+{code} 
 
 h2. Hello world servlet {{SampleServlet}}
-
 {code}
+
+
+
 /**
  * Hello world servlet.
  * 
@@ -167,9 +199,14 @@ public class SampleServlet extends HttpServlet
     resp.getWriter().append("Hello from Sample Jetty");
   }
 }
-{code}
+
+
+
+{code} 
 
 h2. Next Step
-You are ready with coding!
-Now Start the application: [mgc/en/launcher/devguide/3._Run_Application]
+You are ready with coding\!
+ Now Start the application:
+
+See next: {ScrollNextPrevPage}.
 
