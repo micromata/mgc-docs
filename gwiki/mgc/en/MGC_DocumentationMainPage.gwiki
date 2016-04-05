@@ -1,5 +1,5 @@
 {pageintro}
 Micromata Genome Commons is a set of Libraries for all Genome Projects.
 {pageintro}
-
-{children:depth=2|sort=title|withPageIntro=true}
+ 
+{children:depth=2|withPageIntro=true|sort=title}
