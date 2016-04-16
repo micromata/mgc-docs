@@ -1,3 +1,103 @@
 {pageintro}
 de.micromata.mgc.jpa.hibernatesearch provides the Hibernate Search for the EMGR Framework.
 {pageintro}
+ 
+h1. Introduction
+{info}
+For Hibernate Search Information please refer to: [http://hibernate.org/search/|http://hibernate.org/search/]
+{info}
+ 
+h2. Use SearchEmgrFactory
+ 
+ To enable Hibernate Search in MGC JPA, you have to derive your EmgrFactory from the class SearchEmgrFactory.
+{code:lang=java}
+public class HibernateSearchTestEmgrFactory extends SearchEmgrFactory<DefaultSearchEmgr>
+{
+  static HibernateSearchTestEmgrFactory INSTANCE;
+
+  public static synchronized HibernateSearchTestEmgrFactory get()
+  {
+    if (INSTANCE != null) {
+      return INSTANCE;
+    }
+    INSTANCE = new HibernateSearchTestEmgrFactory();
+    return INSTANCE;
+  }
+
+  protected HibernateSearchTestEmgrFactory()
+  {
+    super("de.micromata.mgc.jpa.hibernatesearch.test");
+  }
+
+  @Override
+  protected DefaultSearchEmgr createEmgr(EntityManager entityManager, EmgrTx<DefaultSearchEmgr> emgrTx)
+  {
+    return new DefaultSearchEmgr(entityManager, this, emgrTx);
+  }
+}
+{code}
+ 
+h2. Annotate your Entities
+Use Standard Hibernate Search annotation to declare the fields, which should be available via full text search.
+ Sample:
+{code:lang=java}
+@Entity
+// annotate for Hibernate Search.
+@Indexed
+public class MyEntityDO extends StdRecordDO<Long> implements ComplexEntity
+{
+  /**
+   * Annotate Fields to index.
+   */
+  @Field(index = Index.YES, analyze = Analyze.YES, store = Store.NO)
+  private String name;
+
+  @Field(index = Index.YES, analyze = Analyze.YES, store = Store.NO)
+  private String loginName;
+
+  private String notSearchable;
+
+  @IndexedEmbedded(depth = 2, includePaths = { "nestedName", "nestedNested.nestedNestedComment" })
+  private MyNestedEntity nested;
+
+  @IndexedEmbedded(depth = 1)
+  private Set<MyNestedEntity> assignedNested = new HashSet<>();
+...
+}
+{code}
+ 
+h2. Searching
+{code:lang=java}
+// your factory
+    HibernateSearchTestEmgrFactory emf = HibernateSearchTestEmgrFactory.get();
+
+    // insert an entity 
+    MyEntityDO net = new MyEntityDO();
+    net.setName("Bla");
+    net.setLoginName("Blub");
+    net.setNotSearchable("NOTFOUND");
+    emf.runInTrans((emgr) -> emgr.insert(net));
+
+    // now search 
+    List<MyEntityDO> found = emf.notx().go(emgr -> {
+      List<MyEntityDO> lret = emgr.searchAttached("bla", MyEntityDO.class, "name");
+      return lret;
+    });
+{code}
+ 
+h1. Advanced Topics
+h2. Get Hibernate Search Metadatea
+Because Hibernate search requires to list the field names, where to search (there is no search over all fields of an entity), it is useful to know which fields are available for full text search.
+  
+ SearchEmgrFactory provides Metainformation to build your search query dynamically:
+{code:lang=java}
+HibernateSearchTestEmgrFactory fac = HibernateSearchTestEmgrFactory.get();
+      Map<String, SearchColumnMetadata> searchFields = fac.getSearchFieldsForEntity(MyEntityDO.class);
+      System.out.println("Search fields for MyEntityDO: " + searchFields.keySet());
+{code}
+More functions:
+* public Set<Class<?>> getSearchableEntities(): Provides a List of Entitiy Classes, which are Indexed by Hibernate Search
+* public Set<String> getSearchableTextFieldsForEntity(Class<?> entityClass): Get the field names of an entity, which are indexed as text (and not number or date).
+ 
+ 
+ 

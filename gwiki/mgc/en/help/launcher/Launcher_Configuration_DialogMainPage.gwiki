@@ -1,0 +1,5 @@
+{pageintro}
+Configuration Dialogs to configure the Application with prerequisite resources.
+{pageintro}
+ 
+{children:withPageIntro=true|type=gwiki}

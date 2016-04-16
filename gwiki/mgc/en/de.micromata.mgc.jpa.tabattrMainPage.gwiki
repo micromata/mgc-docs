@@ -1,4 +1,30 @@
 {pageintro}
 Associate attributes with to an normal table.
-
 {pageintro}
+{todo}
+Translate 
+{todo}
+h2. Verwendung
+h4. Entitäten
+Die Haupttabelle wird von JpaTabMasterBaseDO abgeleitet.
+Für die Attributtabelle muss man die Klassen JpaTabAttrBaseDO für die Attribute und JpaTabAttrDataBaseDO und JpaTabAttrBaseDO ableiten.
+In den Unittests des Moduls ist ein Beispiel vorhanden.
+TestMasterAttrDO, TestTabAttrDO und TestTabAttrDataDO
+h3. Optimierung des selects einer Tabelle mit seinen Attributen
+Von TestTabAttrDO gibt es noch eine Ableitung TestTabAttrDataDO. Dies hat folgenden Grund. Bei einem Select TestTabAttrDO muss geprüft werden, ob eventuell noch TestTabAttrDataDO für jedes TestTabAttrDO  mitselektiert werden. Normalerweise können eine Master\-Tabelle und alle Attribute mit zwei selects gelesen werden. Durch die möglichen anhängenden TestTabAttrDataDO muss jedoch für jedes Attribute noch ein select ausgeführt werden.
+Um dies zu verhindern, wurde die Klassen folgendermaßen abgeleitet:
+{code:lang=java}
+@DiscriminatorColumn(name = "WITHDATA", discriminatorType = DiscriminatorType.CHAR)
+@DiscriminatorValue("0")
+public class TestTabAttrDO extends JpaTabAttrBaseDO<TestMasterAttrDO>;
+{code}
+und
+{code:lang=java}
+@DiscriminatorColumn(name = "WITHDATA", discriminatorType = DiscriminatorType.CHAR)
+@DiscriminatorValue("0")
+public class TestTabAttrDO extends JpaTabAttrBaseDO<TestMasterAttrDO>;
+{code}
+Beim Erzeugen eines Attributes wird nun geprüft, ob das Attribute überhaupt für das value\-Feld zu lange Werte hat und statt eines TestTabAttrDO  ein TestTabAttrWithDataDO erzeugt. Dadurch muss beim Selektieren der Attribute auch nur für die langen Attribute ein zusätzliches select ausgeführt werden, das tatsächlich auch TestTabAttrDataDO anhängend hat.
+h2. Datenbankspezifika
+Das Framework geht davon aus, dass in einem Stringfeld bis zu 4000 Zeichen gespeichert werden können.
+Code wurde bislang nur mit Oracle und derby getestet.

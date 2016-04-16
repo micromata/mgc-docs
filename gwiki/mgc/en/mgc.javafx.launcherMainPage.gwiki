@@ -1,17 +1,11 @@
 {pageintro}
 mgc.javafx.launcher is Framework to create Launcher applications, which wrapps a complete application in a single jar,
-with an optional GUI for monitoring and configuration.
+ with an optional GUI for monitoring and configuration.
 {pageintro}
-
 h1. Introduction
 Deployment and configuration for a web based java project is often a little complex.
-The launcher Framework tries to simplify deployment of an web application as single jar (optional also .exe) and provides configuration dialogs for standard settings, like Datasources, logging, etc.
-The framework allows to create own dialogs to manage system settings for their web application.
-
-
-
+ The launcher Framework tries to simplify deployment of an web application as single jar (optional also .exe) and provides configuration dialogs for standard settings, like Datasources, logging, etc.
+ The framework allows to create own dialogs to manage system settings for their web application.
 h1. Howtos
 h2. Starting an application without any windows
-By standard an application launched by the MGC launcher starts with an window. If you don't want this - or if the machine has no display - start the application with the {{-nw}} parameter.
-
-
+By standard an application launched by the MGC launcher starts with an window. If you don't want this \- or if the machine has no display \- start the application with the {{\-nogui}} parameter.

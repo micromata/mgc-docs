@@ -1,3 +1,52 @@
 {pageintro}
 Store Entities fields into a normalized form to provide a pseudo full text search.
 {pageintro}
+ 
+{todo}
+Translate 
+{todo}
+h2. Verwendung
+h3. Entität
+Die Hauptentität, über diese gesucht werden soll, muss mit
+{code:lang=java}
+@Entity()
+@Table(name = "TST_DUMMY_NSEARCHM_ENTITY",
+    uniqueConstraints = {
+        @UniqueConstraint(columnNames = { "longValue" },
+            name = "IX_TST_DUMMY_NSEARCHM_ENTITY_LV") })
+@NormSearchTable(normSearchTable = TestTableMasterSearchDO.class)
+public class DummyHistEntityDO extends StdRecordDO
+{
+  @NormSearchProperty
+  private String stringValue;
+  @NormSearchProperty
+  private String comment;
+{code}
+NormSearchTable annotiert werden. Die Klasse TestTableMasterSearchDO ist eine Entität, die exlusiv der annotierten Entität als Suchtabelle zugeordnet ist.
+ Dabei muss die Suchtabelle von der Entität NormSearchDO abgeitet sein.
+ Die Properties, die in der Suchtabelle aufgenommen werden sollen, werden mit @NormSearchProperty annotiert.
+h3. EmgrFactory
+Damit eine automatische Pflege des Suchindex vorgenommen werden kann, müssen die Emgr Event Handler registriert werden.
+ Dies nimmt man in seiner Implementierung des EmgrFactory vor.
+ Beispiel:
+{code:lang=java}
+public class TestNSearchMgrFactory extends EmgrFactory<DefaultEmgr>
+{
+...
+  @Override
+  protected void registerEvents()
+  {
+    super.registerEvents();
+    NormalizedSearchDaoManager.get().getNormalizedSearchDAO().registerEmgrListener(this);
+  }
+}
+{code}
+ 
+{note}
+ 
+ Damit die Event Handler mitbekommen, dass der Suchindex aktualisiert werden muss, müssen die update und delete Statements mit entsprechenden Methoden von Emgr vorgenommen werden.
+ CriteriaUpdate oder ein UntypedQuery werden nicht unterstützt.
+{note}
+ 
+h2. Beispiel
+Siehe Unittest de.micromata.genome.db.jpa.normsearch.TestNormSearch für ein Beispiel
