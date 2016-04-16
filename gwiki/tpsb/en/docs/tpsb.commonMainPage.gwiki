@@ -1,0 +1,22 @@
+{pageintro}
+tpsb.common contains the basic infrastructure to create TestBuilder. 
+{pageintro}
+{todo:title=Translate}
+ 
+{todo}
+h2. Verwendung
+h3. Annotations
+h4. TpsbApplication
+Mit der Annotation wird eine Klasse als TPSB Applikation markiert
+h4. TpsbBuilder
+Mit der Annotation TpsbBuilder wird eine Klasse als TPSB Builder markiert.
+h4. TpsbIgnore
+Ignoriere Test/Methode.
+h4. TpsbMetaMethod
+Markiert eine Methode innerhalb eines TestBuilders, die gleichzeitig als Testablauf in Form einer TPSB\-Testscenarios dokumentiert wird.
+h3. Interfaces
+Die Verwendung von Interfaces ist für TPSB nicht Voraussetzung.
+h4. TestBuilder
+Das Interface TestBuilder ist das Basisinterface für TestBuilder und TestApplication.
+h3. Basisklassen
+Als BasisKlasse kann der CommonTestBuilder verwendet werden.

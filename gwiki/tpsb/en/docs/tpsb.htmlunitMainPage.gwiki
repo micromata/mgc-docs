@@ -1,0 +1,11 @@
+{pageintro}
+Mit dem Projekt TPSB HtmlUnit kann das HTMLUnit Framework in dem TPSB Framework verwendet werden. 
+{pageintro}
+{todo:title=Translate}
+ 
+{todo}
+Mit HtmlUnit können remote Webanwendungen auf der Ebene HTTP/HTML getestet werden.
+Als Library für die HTTP Verbindung wird HTML Unit verwendet ([http://htmlunit.sourceforge.net/|class=external-link]).
+{todo:title=Use/translate internal documentation}
+ 
+{todo}

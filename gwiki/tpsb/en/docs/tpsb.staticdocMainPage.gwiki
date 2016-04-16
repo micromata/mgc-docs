@@ -1,0 +1,133 @@
+{pageintro}
+Generate HTML documentation about the TPSB Unit Tests. 
+{pageintro}
+ 
+{todo:title=Translate}
+ 
+{todo}
+h2. Usage
+Mit dem {{static\-doc}}\-Projekt von TPSB können statische Test\-Reports über die in einem Projekt befindlichen JUnit Tests automatisiert generiert werden. Bedingung ist, dass bei der Erstellung von Tests Gebrauch von dem Testbuilder\-Konzept gemacht wird. Zur Generierung der statischen Dokumentation werden die Java\-Quell\-Dateien der Testbuilder als auch JUnit\-Tests im Projekt geparst, ausgewertet und in eine lesbare Dokumentationsform umgewandelt.
+h2. GUI
+Es gibt ein Genome Plugin [https://team.micromata.de/confluence/display/genome/Manual+Plugin+tpsbconsole|https://team.micromata.de/confluence/display/genome/Manual+Plugin+tpsbconsole] mit dem man auch Testszenarien über eine GUI editieren kann.
+h2. Kommandozeilen Werkzeug
+Im Projekt gibt es die Main\-Klasse de.micromata.tpsb.doc.StaticTestDocGenerator.
+ Sie hat folgende Parameter:
+* \-\-test\-input,\-ti <Directory>: Projektverzeichnis, die die Quellen enthält, die geparst werden können
+* \-\-output\-path, \-op <Director>:  tpsbrep Ausgabeverzeichnis, in denen das geparste Ergebnis gespeichert werden soll.
+Diese Option kann man mehrfach angeben. Die weiteren Verzeichnisse werden als tpsbrepo includes verwendet
+* \-\-singlexml <true\|false>: Default ist false. Wenn auf true gesetzt, erzeugt nicht für jeden geparsten Test und Builder eine eigene XML\-Datei, sondern eine jeweils für alle Tests und Builder.
+ 
+h3. Konfiguration
+Für die Erzeugung der Testdokumentation sind folgende Konfigurationen notwendig:
+# Testbuilder
+## Repositories in welchen sich Quelldateien der Testbuilder befinden (Source\-Jar, Filesystem)
+## optional ein oder mehrere Filter zur Identifikation der relevanten Java\-Dateien (anhand eines Namenspattern oder einer Annotation)
+# JUnit Tests
+## Repositories in welchen sich Quelldateien der JUnit Tests befinden (Source\-Jar, Filesystem)
+## optional ein oder mehrere Filter zur Identifikation der relevanten Java\-Dateien (anhand eines Namenspattern oder einer Annotation)
+## Renderer für das Ziel\-Report\-Format mit entsprechenden konfigurierbaren Report\-Templates
+## Projektname
+Die Konfiguration erfolgt programmatisch unter Verwendung des Builder\-Patterns. Folgender Klasse enthält alle notwendigen Konfigurationen zur Erzeugung der Projekt\-Test\-Dokumentation.
+{code:lang=java}
+public class StaticDocGenerator {
+ 
+    public static void main(String[] args) {
+        ParserConfig bCfg = new ParserConfig.Builder()//
+                .addSourceFileRespository(new FileSystemSourceFileRepository(new String[]{"src/test/java/de/micromata/sample/testbuilders","src/test/java/de/micromata/sample/testbuilders2"})) //
+                .build();
+ 
+        ParserConfig tCfg = new ParserConfig.Builder() //
+                .addSourceFileRespository(new FileSystemSourceFileRepository("src/test/java/de/micromata/sample/testcases")) //
+                .projectName("Sample TPSB Project") //
+                .build();
+ 
+        StaticTestDocGenerator docGenerator = new StaticTestDocGenerator(bCfg,
+                tCfg);
+        docGenerator.parseTestBuilders();
+        docGenerator.parseTestCases();
+    }
+}
+{code}
+Standardmäßig wird ein HTML\-Report mit einem Standardtemplate erzeugt. Desweiteren werden standardmäßig alle Java\-Dateien innerhalb der angegebenen Pfade ausgewertet, d.h.
+* für Testbuilder: alle Java\-Dateien in {{src/test/java/de/micromata/sample/testbuilders}} und {{src/test/java/de/micromata/sample/testbuilders2}} sowie Unterordner
+* für JUnit Tests: alle Java\-Dateien in {{src/test/java/de/micromata/sample/testcases}} sowie Unterordner
+h3. Konfiguration SourceFileFilter
+Anstatt alle Java\-Dateien in den angegebenen Odnern zu parsen kann anhand von SourceFileFiltern eine Eingrenzung anhand bestimmter Kriterien erfolgen. Momentan stehen 2 Filter zur Verfügung:
+* {{AnnotationSourceFileFilter}}: Es werden alle Dateien in der Parserlauf einbezogen, deren Klasse mit einer zu übergebenen Annotation versehen sind
+* {{MatcherSourceFileFilter}}: Es werden alle Dateien in der Parserlauf einbezogen deren Klassenname einen Matcher\-Ausdruck erfüllt (Genome Matcher Framework)
+Es können auch eigene Filter implementiert werden. Diese müssen das Interface {{de.micromata.tpsb.doc.sources.ISourceFileFilter}} implementieren.
+ Folgend die erweiterte Beispiel\-Konfiguration von oben, welche Gebrauch von Filtern macht:
+{code:lang=java}
+public class StaticDocGenerator {
+ 
+    public static void main(String[] args) {
+        ParserConfig bCfg = new ParserConfig.Builder()//
+                .addSourceFileRespository(new FileSystemSourceFileRepository("src/test/java")) //
+                .addSourceFileFilter(new MatcherSourceFileFilter("*Builder,*App,*builder")) //
+                .addSourceFileFilter(new AnnotationSourceFileFilter(TpsbBuilder.class)) //
+                .build();
+ 
+        ParserConfig tCfg = new ParserConfig.Builder() //
+                .addSourceFileRespository(new FileSystemSourceFileRepository("src/test/java")) //
+                .addSourceFileFilter(new MatcherSourceFileFilter("*Test,*TestCase")) //
+                .projectName("Sample TPSB Project") //
+                .build();
+ 
+        StaticTestDocGenerator docGenerator = new StaticTestDocGenerator(bCfg,
+                tCfg);
+        docGenerator.parseTestBuilders();
+        docGenerator.parseTestCases();
+    }
+}
+{code}
+Hier wird sowohl für TestBuilder als auch Testcases der Pfad {{src/test/java}} verwendet (so wie es in den meisten Projekten wohl sein wird). Eine Unterscheidung zwischen Testbuilder\-Dateien und TestCases\-Dateien wird anhand der Filter erreicht. Für das Parsen der Testbuilder werden alle Java\-Dateien in {{src/test/java}} herangezogen, welche mit der Annotation {{TpsbBuilder}} versehen sind *oder* deren Class\-Name auf "Builder", "App" oder "builder" endet. Als JUnit Tests Sourcen werden alle Klassen herangezogen, welche auf "Test" oder "Testase" enden.
+h3. Konfiguration SourceFileRepositories
+Da nicht alle verwendeten Testbuilder Libraries (z.B. für Stripes, Wicket o.Ä.) lokal auf dem Filesystem vorliegen müssen, werden diese nicht geparst und Aufrufe auf deren Testbuilder\-Methoden somit nicht in der statischen Dokuemntation aufgeführt. Abhilfe kann man durch die Konfiguration eines weiteren Repositories schaffen. Liegen die Testbuilder\-Libraries als Source\-Jars vor so können diese beim Parsen mit einbezogen werden. Hierfür bringt das Projekt neben dem {{FileSystemSourceFileRepository}} ein {{JarSourceFileRepository}} mit. Dies kann wie folgt verwendet werden:
+  
+{code:lang=java}
+public class StaticDocGenerator {
+ 
+    public static void main(String[] args) {
+        ParserConfig bCfg = new ParserConfig.Builder()//
+                .addSourceFileRespository(new FileSystemSourceFileRepository("src/test/java")) //
+                .addSourceFileRespository(new JarSourceFileRepository(new String[]{"dev/libsrc/my-library-sources1.jar", "dev/libsrc/my-library-sources2.jar"})) //
+                .addSourceFileFilter(new MatcherSourceFileFilter("*Builder,*App,*builder")) //
+                .addSourceFileFilter(new AnnotationSourceFileFilter(TpsbBuilder.class)) //
+                .build();
+ 
+        ParserConfig tCfg = new ParserConfig.Builder() //
+                .addSourceFileRespository(new FileSystemSourceFileRepository("src/test/java")) //
+                .addSourceFileFilter(new MatcherSourceFileFilter("*Test,*TestCase")) //
+                .projectName("Sample TPSB Project") //
+                .build();
+ 
+        StaticTestDocGenerator docGenerator = new StaticTestDocGenerator(bCfg,
+                tCfg);
+        docGenerator.parseTestBuilders();
+        docGenerator.parseTestCases();
+    }
+}
+{code}
+ier weren beim Parsen der Testbuilder zusätzlich zu den im Projekt vorhanden projektspezifischen Testbuildern auch diejenigen aus den Jar\-Dateien {{my\-library\-sources1.jar}} und {{my\-library\-sources2.jar}} verwendet.
+ Es können auch eigene SourceFileRepositories implementiert werden. Diese müssen das Interface {{de.micromata.tpsb.doc.sources.ISourceFileRepository}} implementieren.
+h3. Konfiguration Renderer
+Aktuell stehen im Projekt 2 Renderer zur Verfügung:
+h4. VelocityRenderer
+Standardmäßig wird der {{VelocityRenderer}} verwendet, welcher einen HTML Report erzeugt. Als Templates werden standardmäßig die im Projekt mitgelieferten {{defaultTemplate.vm}} und {{defaultIdxTemplate.vm}} verwendet. Es können jedoch auch eigene Velocity Templates konfiguriert werden:
+{code:lang=java}
+ParserConfig tCfg = new ParserConfig.Builder() //
+                .addSourceFileRespository(new FileSystemSourceFileRepository("src/test/java")) //
+                .addSourceFileFilter(new MatcherSourceFileFilter("*Test,*TestCase")) //
+                .projectName("Sample TPSB Project") //
+                .reportRenderer(new VelocityRenderer("myIndexTemplate.vm", "myTemplate.vm"))
+                .build();
+{code}
+Beim {{VelocityRenderer}} wird pro Test\-Klasse ein eigenes HTML herausgeschrieben. Eine Übersicht über alle im Projekt vorhandenen Tests kann anhand eines Index\-Templates erreicht werden.
+  
+h3. Genrerierung statischer Test\-Report
+Nach Ausführung des oben definierten {{StaticDocGenerator}} im zu analysierenden Projekt werden folgende Dateien im Workspace angelegt:
+* {{PROJEKT\_ROOT/target/.tpsb/data\_testBuilder.xml}}: geparste Rohdaten zu den Testbuilder im XML\-Format
+* {{PROJEKT\_ROOT/target/.tpsb/data\_testReport.xml}}: geparste Rohdaten zu den Testcases im XML\-Format
+* {{PROJEKT\_ROOT/target/tpsb\-reports/index.html}}: Erzeugte Report Index\-Seite
+* {{PROJEKT\_ROOT/target/tpsb\-reports/JUNIT\_TEST\_KLASSENNAME.html}}: Pro Testklasse eine erzeugte Doku\-Seite
+ 
