@@ -2,4 +2,26 @@
  Micromata Genome Commons is a set of Java libraries to build mostly webserver based applications.
 {pageintro}
  
+h1. About
+Micromata develops individual Software for enterprises. For critical Application a collection of solutions are shared. 
+{*}MGC{*} is collection of Libraries, which is part of the In\-House\-Product {*}Genome{*} which is an Application Management System based on OSGi for Web applications.
+ The MGC Libraries are also used in the OpenSource projects:
+ \- [ProjectForge|www.projectforge.org]
+ \- [GWiki|https://labs.micromata.de/projects/gwiki.html]
+  
+h1. Resources
+{table:class=gwikiTable}
+{tr}
+{th:class=gwikith}Maven Repo{th}{td:class=gwikitd}Releases: https://labs.micromata.de/nexus/content/repositories/MGC
+ Snapshots: https://labs.micromata.de/nexus/content/repositories/MGC\-snapshot{td}
+{tr}{tr}
+{th:class=gwikith}GIT{th}{td:class=gwikitd}TODO{td}
+{tr}{tr}
+{th:class=gwikith}JIRA{th}{td:class=gwikitd}TODO{td}
+{tr}
+{table}
+ 
+h1. License
+MGC is released unter the Apache 2.0 License. See [https://www.apache.org/licenses/LICENSE-2.0.html|https://www.apache.org/licenses/LICENSE-2.0.html]
+h1. Documentation
 {children:withPageIntro=true|type=gwiki}

@@ -1,0 +1,394 @@
+h2. Begriffe
+h3. Scheduler
+Für eine Klasse bzw. Gruppe von Jobs wird jeweils ein eigener Scheduler eingerichtet. Sinnvollerweise gruppiert man die Jobs in einem Scheduler dann, wenn diese Jobs gemeinsame Schnittstellen ansprechen, wie etwa das Versenden von E\-Mails.
+h3. Threads des Schedulers
+Mit dem Scheduler ist auch eine Anzahl von Threads (ThreadCount) assoziiert, welche die Jobs ausführen.
+ Hierdurch kann eine Warteschlange für die Inanspruchnahme eines externen Services aufgebaut werden. In einem Cluster hat jedoch jede Node eigene Instanzen dieser Scheduler mit den Threads. Das bedeutet, dass z. B. in einem Cluster mit 3 Nodes und einer Threadanzahl von 1 insgesamt 3 Jobs die gleiche Schnittstelle (wie etwa das Versenden von E Mails) ansprechen können.
+ Wenn ThreadCount auf = 0 gesetzt wird, werden keine Jobs mehr gestartet. Die neuen Jobs werden dann nur in die Warteschlange geschrieben. Dies kann sinnvoll sein, wenn ein externer Service für die Ausführung der Jobs dieses Schedulers eine gewisse Zeit nicht verfügbar ist.
+h3. Retrymechanismen
+Ein Job kann aus verschiedenen Gründen fehlschlagen.
+ dies kann er dem Schedule über verschiedene Exceptions signalisieren:
+ Ist die Fehlerursache unbekannt und wirft der Job eine beliebige Exception (z. B. RuntimeException oder eine JobRetryException) aus, so kommt ein *JobRetry* zum Zuge. Im zugeordneten Scheduler sind hierfür zwei Parameter konfiguriert: jobMaxRetryCount legt fest, wie oft der Scheduler versuchen soll, den Job auszuführen und jobRetryTime die Zeit in Sekunden, wie lange der Scheduler zwischen den einzelnen Versuchen warten soll.
+ Wirft ein Job eine ForceRetryException aus, wird nach Ablauf der jobRetryTime der Job erneut gestartet, jedoch der Zähler für die Anzahl jobMaxRetryCount wird nicht heruntergezählt (erzwungener Retry).
+ Neben diesem jobbasierten Retrymechanismus gibt es noch den *Service\-* bzw. *Scheduler\-\*basierten \*Retry:* Alle Jobs, die einer externen Schnittstelle, zum Beispiel der Schnittstelle zum Mailversand oder auch einer Bezahlschnittstelle, zugeordnet sind, werden in einem benannten Scheduler zusammengefasst. Stellt nun ein Job bei der Ausführung fest, dass diese externe Schnittstelle zur Zeit nicht verfügbar ist, kann er eine ServiceUnavailableException auswerfen. In diesem Falle wird der Scheduler für diesen Service angehalten und es werden keine weiteren Jobs gestartet. Neue Jobs werden entsprechend in die Warteschlange gestellt. Erst nach Ablauf der serviceRetryTime in Sekunden wird erneut versucht, Jobs dieses Schedulers zu starten. Im Gegensatz zum JobRetry, dessen Timeout für alle Nodes eines Cluster gilt, ist das Pausieren eines Schedulers nur lokal zu einer Node, da der Service evtl. nicht für alle Nodes erreichbar ist. Wenn also ein Service nicht für alle Nodes eines Clusters verfügbar ist, läuft jeder Scheduler der jeweiligen Node gegen den Fehler.
+h3. Verhalten im Cluster
+Alle Daten von JChronos werden in der Datenbank gehalten. Neue Jobs werden in die Datenbank geschrieben. Beim Schreiben eines Jobs wird die nächste Startzeit des Jobs berechnet und zu dem Job in der Datenbank als absoluter Zeitstempel vermerkt.
+ Alle Nodes versuchen nun gleichberechtigt aus der entsprechenden Tabelle startbare Jobs zu selektieren. Hierbei wird als Vergleichskriterium die Zeit der Datenbank verwendet, so dass unterschiedliche lokale Zeiten auf den Nodes keine Rolle spielen. Wird ein startbarer Job gefunden, versucht die Node durch ein Update den Job für sich zu reservieren:
+{code:lang=markup}
+update VW_TA_JCHRONOS_JOB set STATE = 'SCHEDULED'
+where TA_JCHRONOS_JOB= #id# and state = 'WAIT'
+{code}
+Hierdurch erhalten alle Nodes die Chance, einen Job zu starten, unabhängig davon, welche Node diesen Job ursprünglich in die Datenbank eingefügt hat.
+ JChronos enthält zusätzlich einen Mechanismus, um eine Bindung der Jobs eines Schedulers auf eine bestimmte Node zu erreichen. Hierzu wird im Scheduler ein nodeBindingTimeout in Sekunden definiert. Bei der Suche nach startbaren Jobs selektiert die Node, deren Name in der Jobzeile steht (in der Regel die Node die den Job in die Jobtabelle geschrieben hat) anhand des aktuellen Zeitstempels, während alle anderen Nodes bei der Suche nach startbaren Jobs zu dem aktuellen Zeitstempel auch noch den Wert nodeBindingTimeout hinzuzählen. Hierdurch bekommt die Node, deren Namen in der Jobtabelle steht, einen Zeitvorteil. Ist diese Node jedoch dauerhaft nicht in der Lage, die Jobs zu starten (da sie beispielsweise vorübergehend nicht läuft), kann der Job nach Ablauf dieses Timeouts noch von anderen Nodes ausgeführt werden. Ist dieser Fallback für einen spezifischen Job nicht wünschenswert, so muss innerhalb der Jobimplementierung überprüft werden, ob aktueller Nodename und Jobnodename identisch sind und andernfalls der Job erneut in die Datenbank geschrieben werden.
+ In der gegenwärtigen Konfiguration wird für den Nodename der Hostname des ausführenden Systems verwendet.
+h3. Status eines Jobs
+Ein Job in der Datenbank kann folgende Zustände einnehmen:
+* WAIT: Der Job wartet auf seine Ausführung und ist durch ein Scheduler aktivierbar.
+* SCHEDULED: Hat ein Scheduler einen Job für sich reserviert, wird der Status von WAIT auf SCHEDULED umgestellt.
+* RUN: Ein Job läuft.
+* STOP: Ein Job ist, in der Regel mit einem Fehler, abgebrochen.
+* FINISHED: Ein Job ist erfolgreich beendet.
+* RETRY: Ein Job ist nicht erfolgreich abgeschlossen und befindet sich im Retry. Nach der Berechnung des nächsten Startzeitpunktes wird danach der Job wieder in den WAIT\-Status gesetzt.
+* CLOSED: Dieser Status wird nicht von JChronos selbst, sondern nur über die Adminoberfläche gesetzt, um einen Job, der vormals mit Fehler beendet wurde ,"als erledigt" zu markieren.
+Es ergeben sich folgende Übergänge:
+* WAIT \-> SCHEDULED: Job wurde von einer Node reserviert
+* SCHEDULED \-> RUN. Job wurde gestartet
+* SCHEDULED \-> WAIT. Job konnte von Scheduler nicht gestartet werden.
+* RUN \-> FINISHED: Job wurde mit Erfolg abgeschlossen
+* RUN \-> RETRY: Job muss neu gestartet werden.
+* RUN \-> STOP: Job hat mit sich einen Fehler beendet, jedoch ohne Retry.
+* RETRY \-> WAIT: Retry\-Situation, nachdem der nächste Startzeitpunkt berechnet wurde.
+h3. Trigger
+Zur Bestimmung des Startzeitpunktes eines Jobs werden in JChronos Trigger verwenden. Trigger sind Javaklassen, die das Interface Trigger implementieren und die anhand eines optionalen Stringargument für einen Job den nächsten Startzeitpunkt berechnen. Dieser wird dann in die Jobtabelle als absolutes Datum eingetragen.
+ Hierfür stellt JChronos zwei Trigger standardmäßig zur Verfügung:
+h4. DelayTrigger
+Der nächste Startzeitpunkt berechnet sich aus der Zeit des Einfügens eines Jobs (Submit) plus der angegeben Zeit in Millisekunden. Die Standardnotation eines DelayTriggers ist zum Beispiel:
+{{\+}}{{1000}}
+ wobei der Job mit einer Zeitverzögerung von 1 Sekunde gestartet wird.
+h4. CronTrigger
+Ein CronTrigger hat als Definition ein CronTab\-Ausdruck.
+ Ein Crontab\-Ausdruck hat 5 Felder:
+* Minute
+* Stunde
+* Tag im Monat
+* Monat
+* Tag in der Woche
+Jedes dieser Felder kann folgende Inhalte haben
+* {{\*}}: passt auf alle Werte
+* {{n}}: passt wenn aktuelle Zeitkomponente mit diesem Feld übereinstimmt
+* {{m\-n}}: passt wenn aktuelle Zeitkomponente diesem Zahlenbereich übereinstimmt
+* {{\*/n}}: Modulo operator: passt wenn aktuelle Zeitkomponente durch n teilbar ist
+* {{m\-n/x}}: passt wenn aktuelle Zeitkomponente innerhalb des Zahlenbereiches m\-n ist und durch x teilbar ist.
+Das Feld für Wochentag verwendet folgende Zahlen:
+ 1: Montag: kann auch als MON geschrieben werden.
+ 2: Dienstag (TUE)
+ 7: Sonntag (SUN)
+ Im Unterschied zu Unix cron wird ein JChronos cron im Ausdruck etwas anders gehandhabt. Beispiel:
+{{0}}{{0}}{{1}}{{\* MON}}
+ Unter Unix passt der Ausdruck auf den ersten Tag jedes Monats und zusätzlich auf jeden Montag.
+ Unter JChronos passt dieser Ausdruck nur dann, wenn der erste Tag des Monats auch ein Montag ist.
+ Dies ermöglicht Ausdrücke unter JChronos, die genau auf den ersten Sonntag des Monats passen:
+{{0}}{{0}}{{1}}{{\-}}{{7}}{{\* SUN}}
+  
+h4. FixedTrigger
+Startet der Triggerausdruck mit einem \! wird folgend ein ISO Dateformat yyyy\-MM\-dd HH:mm erwartet.
+ Der Job startet dann zu dem gegeben Zeitpunkt.
+h4. Weitere Trigger
+Da Trigger als Interface innerhalb JChronos implementiert sind, sind weitere Triggerimplementierungen möglich.
+h4. Latenz bei Triggern
+Für die Berechnung des Startzeitpunktes ist die lokale Zeit der Node relevant, nicht die Zeit der Datenbank.
+ Anmerkung zu impliziter Zeitverzögerung innerhalb der Dispatcherimplementierung (Dispatcher ist die Instanz, die startbare Jobs in der Datenbank sucht und diese dann den Schedulern zuweist):
+ Damit nicht ständig eine hohe Last durch die Suche nach startbaren Jobs entsteht, ist innerhalb des Dispatcher eine gewisse Latenz vorhanden:
+ Konnte der Dispatcher einen Job aktivieren und einem Scheduler zuordnen, wird unmittelbar danach erneut nach startbaren Jobs gesucht. Konnte der Dispatcher jedoch keine Jobs finden, wartet der Dispatcher initial 10 Millisekunden und nach jedem erfolglosen Versuch die doppelte Zeit bis maximal 1 Sekunde.
+h3. Formen der Serialisierung von Objekten
+JChronos nutzt keine Blobfelder in der Datenbank, sondern normale Textfelder. Durch den Umstand, dass Oracle hier Limitationen bezüglich der Größe von den Textfeldern hat, muss darauf geachtet werden, dass 1300 Bytes nicht überschritten werden.
+ Diese Limitation betrifft folgende Felder:
+* JobDefinition: Serialisiertes Javaobjekt für die Factoryklasse eines Jobs bzw. alternative Darstellung (siehe weiter unten)
+* TriggerDefinition: Serialisiertes Javaobjekt für die Factoryklasse eines Triggers bzw. alternative Darstellung (siehe weiter unten)
+* JobArgument: Serialisiertes Javaobjekt für ein Jobargument bzw. alternative Darstellung (siehe weiter unten)
+* JobResult: Serialisiertes Javaobjekt für ein Jobergebnis bzw. alternative Darstellung (siehe weiter unten)
+Nullobjekte werden mit {{<null/>}} abgebildet.
+ Zeichenketten werden mit einem " eingeleitet (aber nicht abgeschlossen).
+{{Ist das erste Zeichen ein <, enthält die Datenbankzelle ein mit XStream serialisiertes Java\-Objekt.}}
+ Andernfalls wird eine Definition im folgenden Format erwartet:
+ java.ClassName: Argument
+ wobei java.ClassName eine Klasse ist, die das Interface de.micromata.jchronos.spi.jdbc.Stringifiable implementiert.
+ Bei Triggerdefinitionen gelten hiervon leicht abweichende Regeln:
+ Ist das erste Zeichen ein \+ folgt eine Zahl für einen DelayTrigger.
+{{Ist das erste Zeichen ein < folgt ein mit XStream serialisiertes Objekt.}}
+ Ansonsten wird eine Regel für den CronTrigger erwartet.
+h3. Jobergebnis (JobResult)
+In JChronos kann das Ergebnis eines Jobs drei Status haben:
+* Job liefert kein Ergebnis
+* Job liefert ein Ergebnis
+* Job liefert einen Fehler
+Bei häufig ausgeführten, kurz laufenden Jobs haben diese in der Regel kein Ergebnis. In Java bedeutet dies, dass die entsprechende Methode call null zurückliefert. In diesem Fall wird in die JobResult\-Tabelle auch kein Eintrag geschrieben. Liefert der Trigger keinen erneuten nächsten Startzeitpunkt zurück und befand sich der Job auch nicht in einem Retryzyklus, wird der Job nach dem Ausführen aus der Jobtabelle gelöscht.
+ Dies hat den Vorteil, dass die Jobtabelle relativ klein bleibt.
+ Ein Job kann beim Aufruf auch ein Javaobjekt zurückliefern. In diesem Fall wird das Ergebnis in die JobResult\-Tabelle in XML\-serialisierter Form eingetragen.
+ Liefert ein Job einen Fehler (Exception, Job\- oder ServiceRetry), wird in der Jobresult\-Tabelle die Exception in Form eines Stacktraces eingetragen.
+h2. Startkonfiguration
+Die Standardkonfiguration wird in einer Spring\-Context\-XML\-Konfigurationsdatei vorgenommen, die über die Baussteinverwaltung unter dem Namen CONTEXT\_CHRONOS versioniert wird.
+h3. Konfiguration der Scheduler
+Für den Start von Jobs werden in der Startkonfiguration Scheduler benötigt.
+ Diese werden als Liste im Property ScheduleFactories definiert.
+ Ist ein in CONTEXT\_CHRONOS definierter Scheduler bereits in der Datenbank vorhanden, wird die Konfiguration dieses Scheduler ignoriert. Die Konfiguration ergänzt nur noch in der Datenbank fehlende Scheduler.
+ Möchte man Parameter des Scheduler nachträglich ändern, kann man diese über das AdminWeb anpassen.
+ Die Änderung der Scheduler sollte nur in Absprache mit den Entwicklern vorgenommen werden.
+ Beispiel:
+{code:lang=markup}
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE beans PUBLIC "-//SPRING//DTD BEAN//EN" "http://www.springframework.org/dtd/spring-beans.dtd">
+ 
+<beans>
+  <bean id="schedulerManager" class="de.micromata.genome.chronos.manager.SchedulerManager">
+    <property name="scheduleFactories">
+      <list>
+        <bean class="de.micromata.genome.chronos.util.SchedulerFactory">
+          <property name="schedulerName" value="testSched" />
+        </bean>
+        <bean class="de.micromata.genome.chronos.util.SchedulerFactory">
+          <property name="schedulerName" value="email" />
+          <property name="jobRetryTime" value="60" />
+          <property name="serviceRetryTime" value="60" />
+          <property name="jobMaxRetryCount" value="2" />
+          <property name="nodeBindingTimeout" value="0" />
+          <property name="threadPoolSize" value="2" />
+        </bean>
+        
+      </list>
+    </property>
+ 
+    <property name="jobs">
+      <map>
+      </map>
+    </property>
+    <property name="standardJobs">
+    <list></list>
+    </property>
+    <property name="startupJobs">
+    <list></list>
+    </property>
+ 
+ 
+  </bean>
+</beans>
+{code}
+ 
+h3. Konfiguration der Benannten Jobs
+Innerhalb der Anwendung werden Jobs über einen symbolischen Namen referenziert. Die dazugehörigen Jobs müssen in  Contextchronos definiert sein.
+ Die Änderung der Standardjobs sollte nur in Absprache mit den Entwicklern vorgenommen werden.
+{code:lang=markup}
+<property name="jobs">
+      <map>
+        <!-- aus dem core -->
+        <entry key="jobExample1">
+          <bean class="de.micromata.genome.chronos.manager.JobBeanDefinition">
+            <!--  nutzt den Test-Scheduler -->
+            <property name="schedulerName" value="testSched" />
+            <property name="jobDefinition">
+              <bean class="de.micromata.genome.chronos.util.ClassJobDefinition">
+                <constructor-arg
+                  value="de.micromata.genome.chronos.FutureJob" />
+              </bean>
+            </property>
+            <property name="triggerDefinition" value="+0" />
+            <!--
+            <property name="triggerDefinition" value="*/2 * * * *" />
+            -->
+          </bean>
+        </entry>
+         
+        <!-- aus einem plugin -->
+        <entry key="jobExample2">
+          <bean class="de.micromata.genome.chronos.manager.JobBeanDefinition">
+          <!--  nutzt den Test-Scheduler -->
+            <property name="schedulerName" value="testSched" />
+            <property name="jobDefinition">
+              <bean class="de.micromata.genome.chronos.manager.GWarJobFactory">
+                <constructor-arg value="vadminweb" />
+                <constructor-arg
+                  value="de.micromata.genome.chronos.FutureJob" />
+              </bean>
+            </property>
+            <property name="triggerDefinition" value="+0" />
+          </bean>
+        </entry>
+         
+      </map>
+    </property>
+{code}
+ 
+h3. Konfiguration von StandardJobs
+Beim Starten wird überprüft, ob die in der Konfiguration hinterlegten standardJobs schon vorhanden sind, und wenn nicht, werden sie submittet.
+ Dafür müssen die Jobs einen eindeutigen jobName haben.
+ Wenn JobBeanDefinition.onePerNode auf true steht, wird der Job auch dann submittet, wenn auf der aktuellen Node dieser Job noch nicht vorhanden ist.
+  
+ Wenn in den LocalSettings genome.chronos.skipStandardJobs auf true steht, werden diese Jobs nicht ausgeführt.
+{code:lang=markup}
+<property name="standardJobs">
+      <list>
+        <bean class="de.micromata.genome.chronos.manager.JobBeanDefinition">
+          <property name="schedulerName" value="logReporter" />
+          <property name="jobName" value="logReporter" />
+ 
+          <property name="jobDefinition">
+            <bean class="de.micromata.genome.chronos.util.ClassJobDefinition">
+              <constructor-arg value="de.micromata.genome.logging.SendLogReportFutureJob" />
+            </bean>
+          </property>
+          <property name="triggerDefinition" value="0 * * * *" />
+          <property name="jobArgument" value="INTERVAL=60|SENDER=dhl-vls-its-log@micromata.de|RECEIVER=dhl-vls-its-log@micromata.de|GROUP=true|LOGLEVEL=Warn" />
+        </bean>
+</property>
+{code}
+h3. Konfiguration von StartupJobs
+Beim Starten werden die in startupJobs definierten Jobs submittet.
+Wenn in den LocalSettings genome.chronos.skipStartupJobs auf true steht, werden diese Jobs nicht ausgeführt.
+h2. Administrationsweb von JChronos
+Der Zugriff auf das Administrationsweb von JChronos innerhalb von SSO/SVO geschieht unter der URL /gw/gadmin. Die entsprechenden Menüpunkte werden nur dann angezeigt, wenn der AdminUser auch die Rechte hierfür besitzt:
+* SCHED\_VIEW: Scheduler und Jobs ansehen.
+* SCHED\_EDIT: Scheduler ändern und neue Jobs einstellen.
+h3. Scheduler
+Unter dem Menüpunkt Scheduler sind die vorhandenen Scheduler aufgelistet.
+Um die Parameter eines bestehenden Schedulers anzupassen, muss man in der Liste den Namen des Schedulers anklicken. Hierdurch werden in dem Formular unter der Liste die bestehenden Parameterwerte des Schedulers vorbefüllt.
+Für die Bedeutung der Parameter siehe weiter bzw. die Beschreibungen in der Webseite.
+h3. Scheduler Jobs
+\!scheduler.png\! Maske Scheduler Jobs
+Screenshots anpassen.
+Über den Menüpunkt Scheduler Jobs werden Jobs gelistet. Über der Tabelle befinden sich Filterkriterien wie Schedulernamen, Status des Jobs oder Hostname (Node) des Jobs.
+Klickt man in der ersten Spalte auf das kleine rote Dreieck, kann man die evtl. vorhandenen JobResults des Jobs ansehen.
+Durch die Dropdownliste neben der Spalte State kann man den Status eines Jobs umschalten. Hierdurch kann man einen wartenden Job deaktivieren (in dem man ihn auf STOP, FINISHED oder CLOSED setzt) oder einen fehlgeschlagenden Job erneut ausführen, indem man ihn erneut auf WAIT setzt (dies geht jedoch nur, wenn nextFireTime gesetzt ist).
+In der Spalte jobRetryCount wird angezeigt, wie oft dieser Job bereits ausgeführt wurde.
+Bewegt man den Mauscursor über eine JobDefinition, wird die gesamte JobDefinition in einem Tooltip angezeigt.
+Klickt man bei einem Job auf Clone in der letzten Spalte, wird die Maske "Job anlegen" geöffnet, wobei die JobDefinition mit den Parametern des Jobs vorbefüllt wird.
+h3. Job anlegen
+Über die Maske "Job anlegen" kann ein neuer Job angelegt werden.
+Über die Dropdownliste wird festgelegt, welchem Scheduler der Job zugeordnet werden soll.
+JobDefinition, JobArgument und Triggerdefinitionen erwarten entprechend Kapitel 16.2.7 Formen der Serialisierung von Objekten und der Seite 81 entsprechende Eingaben.
+Zusätzlich akzeptiert dieses Eingabeformular folgende Formate:
+Fängt die Zeichenkette mit {{<bean}} an, wird eine SpringBeanDefinition erwartet.
+Enthält JobArgument einen String, der kein : enthält, kann das einleitende " entfallen.
+h2. JChronos Implementierungen
+h3. JPA (Seit 2.0)
+Standardimplementierung für JPA.
+h3. JDBC (Deprecated seit 2.0)
+Die Standardimplementierung legt die Jobs innerhalb der Datenbank ab.
+Diese Implementierung ist standardmäßig wiederstart\- und clusterfähig.
+h3. RAM
+Eine  noch im Alpha\-Stadium befindliche \-Implementierung legt die Jobs lediglich im Speicher der Anwendung ab.
+h2. Erweiterte Themen
+h3. Benachrichtigung bei finalem Fail
+Ein Job kann das Interface FutureJobStatusListener implementieren.
+ Schlägt ein Job Final fehl und geht in den Status STOP, wird die methode FutureJobStatusListener.finalFail auftgerufen.
+h3. Erneutes Starten von unterbrochenen RUN Jobs beim Neustart einer Node (seit 1.1.6)
+Der SchedulerManager startet stehen gebliebene Jobs, die auf RUN oder SCHEDULED stehen, mit der eigenen Node beim Starten neu, wenn:
+* das zugehörige Flag {{restartOwnJobsOnBooting}} gesetzt ist (default: true), und
+* der {{modificationTime}}\-Zeitstempel mindestens 5 Minuten alt ist.
+Da der Dispatcher zum Zeitpunkt dieser Suche noch gar nicht aktiv ist, können solche Jobs eigentlich noch nicht existieren. Falls es doch ebensolche gibt, bedeutet das, dass diese unerwartet beendet worden sind, z.B. durch einen System\-Absturz. Nun werden sie erneut gestartet, indem ihr Zustand auf WAIT gesetzt wird, wodurch sie beim nächsten Durchlauf des Schedulers gestartet werden.
+h3. Jobs wieder in Wait setzen (seit 1.1.8)
+Über die Oberfläche kann ein Job, der nach Ablauf seiner Retries im Job stehen wieder auf WAIT gestellt werden. In diesem Fall wird nextFireTime erneut berechnet und der retryCounter wieder auf 0 gesetzt.
+h3. Jobs vorzeitig beenden (seit 1.1.8)
+Läuft ein Job und steht in RUN und stellte den Job über die GUI auf STOP oder CLOSED hat der Job nach Beendigung nextFireTime erneut berechtigt und den Job wieder auf WAIT gestellt.
+ Mit 1.1.8 wird zuerst geprüft, ob der Job nach Beendigung noch den RUN Status hat, bevor der neu berechnete Status gesetzt wird.
+ 
+h2. Job Tools
+h3. SchedControl (seit 1.1.6)
+Im genomeconsole Plugin gibt es einen Job SchedControl, der für die Analyse und Kontrolle von Scheduler und Threads verwendet werden kann.
+* dumpthreads: Dumpt alle Stacktraces von allen Threads ins Logging
+* restartdisp: Startet den dispatcher Hauptthread neu
+* stopsched/startsched stoppt/started den mit sched benannten Scheduler.
+* killthread: Töten einen Thread. Achtung das kann die JDK instabil werden lassen.
+Beispiel:
+ Definition
+{code:lang=markup}
+<de.micromata.genome.chronos.manager.GWarJobFactory>
+  <gwarName>genomeconsole</gwarName>
+  <className>de.micromata.genome.gadmin.scheduler.jobs.SchedControl</className>
+</de.micromata.genome.chronos.manager.GWarJobFactory>
+{code}
+JobArgument
+{{cmd=dumpthreads}}
+Nach Ausführen im Logging:
+{code:lang=markup}
+2011-05-31 15:58:30:188     Note    GNM.System  Dump Threads for: rogmws    1081240
+NodeName    rogmws
+AdminUserName   none
+RequestUrl
+ 
+job:SchedControl
+ 
+TechReasonException
+ 
+ 
+ThreadGroup: system
+    class: java.lang.ThreadGroup
+    Thread: 5
+      name: Attach Listener
+      class: java.lang.Thread
+      prio: 5
+      state: RUNNABLE
+      classLoader: sun.misc.Launcher$AppClassLoader@3093dee9
+        pcl: sun.misc.Launcher$ExtClassLoader@3c0fabe9
+ 
+      stack:
+ 
+    Thread: 15
+      name: RMI TCP Accept-0
+      class: java.lang.Thread
+      prio: 5
+      state: RUNNABLE
+      classLoader: sun.misc.Launcher$AppClassLoader@3093dee9
+        pcl: sun.misc.Launcher$ExtClassLoader@3c0fabe9
+ 
+      stack:
+        java.net.PlainSocketImpl.socketAccept(Native Method)
+        java.net.PlainSocketImpl.accept(PlainSocketImpl.java:384)
+        java.net.ServerSocket.implAccept(ServerSocket.java:453)
+        java.net.ServerSocket.accept(ServerSocket.java:421)
+        sun.management.jmxremote.LocalRMIServerSocketFactory$1.accept(LocalRMIServerSocketFactory.java:34)
+        sun.rmi.transport.tcp.TCPTransport$AcceptLoop.executeAcceptLoop(TCPTransport.java:369)
+        sun.rmi.transport.tcp.TCPTransport$AcceptLoop.run(TCPTransport.java:341)
+        java.lang.Thread.run(Thread.java:619)
+...
+         class: java.lang.ThreadGroup
+        Thread: 16
+          name: JCDT[AMSEL]: de.micromata.genome.chronos.spi.jdbc.JdbcJobStore@25c20c74 at 4de4f382;-1
+          class: java.lang.Thread
+          prio: 5
+          state: TIMED_WAITING
+          classLoader: WebappClassLoader
+  delegate: false
+  repositories:
+    /WEB-INF/classes/
+----------> Parent Classloader:
+org.apache.catalina.loader.StandardClassLoader@64bbf7aa
+ 
+            pcl: org.apache.catalina.loader.StandardClassLoader@64bbf7aa
+              pcl: org.apache.catalina.loader.StandardClassLoader@7aa89ce3
+                pcl: sun.misc.Launcher$AppClassLoader@3093dee9
+                  pcl: sun.misc.Launcher$ExtClassLoader@3c0fabe9
+ 
+          stack:
+            java.lang.Object.wait(Native Method)
+            de.micromata.genome.chronos.spi.DispatcherImpl2.run(DispatcherImpl2.java:214)
+            java.lang.Thread.run(Thread.java:619)
+ 
+      ThreadGroup: JCWTG[AMSEL]: de.micromata.genome.chronos.spi.jdbc.JdbcJobStore@25c20c74 at 4de4f382;10; logReporter
+                class: java.lang.ThreadGroup
+          Thread: 36
+            name: JCWT[AMSEL]: de.micromata.genome.chronos.spi.jdbc.JdbcJobStore@25c20c74 at 4de4f382;10; logReporter1
+            class: de.micromata.genome.chronos.spi.SchedulerThread
+            prio: 5
+            state: RUNNABLE
+            classLoader: de.micromata.genome.web.gwar.bootstrap.GWarClassLoader@4cc0e346
+              pcl: WebappClassLoader
+  delegate: false
+  repositories:
+    /WEB-INF/classes/
+----------> Parent Classloader:
+org.apache.catalina.loader.StandardClassLoader@64bbf7aa
+ 
+                pcl: org.apache.catalina.loader.StandardClassLoader@64bbf7aa
+                  pcl: org.apache.catalina.loader.StandardClassLoader@7aa89ce3
+                    pcl: sun.misc.Launcher$AppClassLoader@3093dee9
+                      pcl: sun.misc.Launcher$ExtClassLoader@3c0fabe9
+ 
+            stack:
+              java.lang.Thread.dumpThreads(Native Method)
+              java.lang.Thread.getAllStackTraces(Thread.java:1477)
+              de.micromata.genome.gadmin.scheduler.jobs.SchedControl.dumpStackTracesToLog(SchedControl.java:188)
+              de.micromata.genome.gadmin.scheduler.jobs.SchedControl.call(SchedControl.java:101)
+              de.micromata.genome.chronos.manager.AbstractCommandLineJob$1.run(AbstractCommandLineJob.java:75)
+              de.micromata.genome.web.DynDaoFilterDAOImpl.runJob(DynDaoFilterDAOImpl.java:84)
+              de.micromata.genome.chronos.manager.AbstractCommandLineJob.call(AbstractCommandLineJob.java:71)
+              de.micromata.genome.chronos.manager.SchedulerBaseDAO$1.call(SchedulerBaseDAO.java:55)
+              de.micromata.genome.stats.StatsDAOImpl.runLongRunningOp(StatsDAOImpl.java:248)
+              de.micromata.genome.chronos.manager.SchedulerBaseDAO.invokeJob(SchedulerBaseDAO.java:48)
+              de.micromata.genome.chronos.manager.JobFilterChain.doFilter(JobFilterChain.java:31)
+              de.micromata.genome.chronos.manager.SchedulerBaseDAO.filterJobRun(SchedulerBaseDAO.java:41)
+              de.micromata.genome.chronos.spi.JobRunner.run(JobRunner.java:123)
+              java.util.concurrent.ThreadPoolExecutor$Worker.runTask(ThreadPoolExecutor.java:885)
+              java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:907)
+              java.lang.Thread.run(Thread.java:619)
+{code}
+ 
