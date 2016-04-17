@@ -1,0 +1,17 @@
+{pageintro}
+The application may use a Database. With JPA/Hibernate Settings you can configure some aspects.
+{pageintro}
+ 
+h3. Schema Update
+* update: Create the necessary tables, etc. in the database
+* validate: Check if tables, etc. exists in the database, but does modify the schema
+* create: Asume you are starting with an empty database schema. Creates all necessary tables
+* create\-drop: Create tables and drop them after shutdown the application
+{note}
+In Production you should always use validate. 
+{note}
+ 
+h3. Show SQL
+Hibernate print the executed SQL Statements on standard output. You have to run the application in a console window to view the SQL Statements.
+h3. Format SQL
+If Show SQL is on, the SQL Statements printed are formatted.

@@ -1,0 +1,18 @@
+{pageintro}
+If the application want to send emails, you have to configure the email SMPT server.
+{pageintro}
+ 
+h3. Standard sender Email
+The Email the application used as default sender address for sending emails.
+h3. Enable sending Email
+If enabled a MailSession will be configured and is available via JNDI.
+  
+h3. SMPT Host and Port
+Provide Hostname and Port of the SMPT server.
+h3. Authentification
+If your SMPT server needs authentification, provide user name and password.
+{warn:title=Security}
+Using plain SMPT with Authentification is dangerous, because user name and password are passed as plain text through the internet. 
+{warn}
+
+  

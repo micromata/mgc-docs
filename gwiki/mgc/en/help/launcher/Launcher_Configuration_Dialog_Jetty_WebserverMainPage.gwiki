@@ -32,10 +32,27 @@ If enabled Jetty logs every incoming Request. The Logs can be found in the logs 
   
 h3. HTTPS
 You can enable HTTPs for your Webserver.
-For HTTPS you need a SSL certificate. If you provide your Web application in the internet, you have to buy an certificate. 
-For testing purpose you can also use a self signed certificate.
+ For HTTPS you need a SSL certificate. If you provide your Web application in the internet, you have to buy an certificate. 
+ For testing purpose you can also use a self signed certificate.
 h3. HTTPS Port
 Port number to listen
-With HTTPS only, the HTTP Port will be deactivated.
+ With HTTPS only, the HTTP Port will be deactivated.
+h3. Keystore
+The keystore contains the SSL certificate, which will be used in to encrypt the HTTP Requests/Responses.
+h3. Keystore Password
+Password protects the access to keystore.
+h3. Truststore Path
+Path to Truststore file. If you have no Truststore same file as given in Keystore
+h3. Truststore Password
+Password to open the Truststore file. If you have no Truststore, same as in Keystore password.
+h3. Cert Alias
+Because one Keystore can contain multiple certificates, the certificate has to be addressed by its alias.
+h2. Generate Selfsigned Certificate
+If you have no SSL certificate you can generate your own cerficicate. Put in the SSL fields above the values (Paths and Passwords) which should be used to generate the SSL certificate.
+{warn:title=Test only}
+Self signed cerficate are not secure, because there is no proof, that the URL the user open in the Browser matches with the cerficate.
+(But it is still better as using plain HTTP, because all traffic \- including passwords \- are passed in clear text in HTTP.
+Use this only for Testing. 
+{warn}
  
  

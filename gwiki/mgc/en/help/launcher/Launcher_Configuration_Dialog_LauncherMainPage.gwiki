@@ -12,4 +12,4 @@ h2. Start Server at startup
 If checked, the Application will be started immediatelly after starting the Launcher.
 h2. Open Browser at startup
 If checked the Launcher will open a Browser window, after application is started.
- 
+  

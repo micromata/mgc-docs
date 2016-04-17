@@ -1,0 +1,7 @@
+{pageintro}
+The application uses the Log4J framework to write debugging and trace logs.
+{pageintro}
+{warn:title=Experts only}
+Change these values only, if you know what you are doing. 
+The documentation of the format of the Log4J\-Property file can be on the log4j project pages. 
+{warn}
