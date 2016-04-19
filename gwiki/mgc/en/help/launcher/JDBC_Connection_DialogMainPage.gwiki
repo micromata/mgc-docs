@@ -1,6 +1,8 @@
 {pageintro}
 With the JDBC Connection Dialog you can configure a database connection, which is published by JNDI
 {pageintro}
+The JDBC dialog may be shown standalone or embedded in other configuration dialogs.
+!mgc/en/help/launcher/JdbcDialog.png!
  
 h3. JDBC Driver
 Select a JDBC Driver to be used by the application to create an DB\-Connection
@@ -11,4 +13,19 @@ h3. Database User
 The user name for authentification. Not all Database Driver/Connections need a user name.
 h3. Database password
 The Database User password. Not all Database Driver/Connections need a user password.
-  
+h2. Extended Settings
+With the Extended Settings the DataSource Pool can be configured
+* maxActive: How many connections will be established to the Database at maximum
+* initalSize: At startup of the application, how many connections will be created and held in the connection pool
+* maxWait: How many milliseconds the connection pool should wait while opening a connection to the Database
+* maxIdle; How may idle (unused) maximum connections should held by the connection pool
+* minIde: How may idle (unused) minimum connections should held by the connection pool
+* autocommit: Should the Autocommit enabled for the connections of this datasource
+h3. Default Catalog
+Which Catalog in the database schema should be used. 
+h3. Validation Query
+A SQL Statement which should be used to check if connection is still valid
+h3. Validation Query Timeout
+How many seconds the Validation Query can be take, until the connection considered not ok.
+ 
+ 

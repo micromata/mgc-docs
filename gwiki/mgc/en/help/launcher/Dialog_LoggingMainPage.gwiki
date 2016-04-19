@@ -1,0 +1,12 @@
+{pageintro}
+Configure the MGC Genome Logging feature. These Logs are also shown in Launcher Logging Window
+{pageintro}
+By default you can write the MGC Logs into logfiles using the standard Log4J configuration.
+!mgc/en/help/launcher/DialogLoggingToLog4J.png!
+  
+h2. Pass Log4J to Genome Logging
+If you want also pass Logs, which are written by the Log4J Logging to the Genome Logging, select this option.
+h2. Using Database as Logging target
+Log entries written by log4j into files can not be searched very well. Using a Database as target, you can search Logfiles from the past.
+ You have to configure a database connection. See [mgc/en/help/launcher/JDBC_Connection_Dialog].
+  

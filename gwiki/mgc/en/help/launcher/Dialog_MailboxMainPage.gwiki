@@ -1,0 +1,26 @@
+{pageintro}
+With mailbox an application can read emails from a IMAP or POP3 Account. 
+{pageintro}
+ 
+!mgc/en/help/launcher/DialogMailbox.png!
+h3. Enable Receive Emails
+Check this to enable to receive emails.
+{info:title=Optional}
+On some application this checkbox is disabled because the application requires this functionality. 
+{info}
+ 
+h3. Protocol
+Select the protocol of your IMAP or POP3 Server.
+h3. Server and port
+The Server and Port of the IMAP or POP3 Server.
+h3. User name and Password
+User name and password of the Mail owner
+h3. Default Mailfolder
+Before selecting a Mailfolder, you have to click the *Test* button. If the test is successfull the Mailfolder dropdown should be filled with available folders on the Mail account.
+h3. Self Signed Cert
+{warn:title=Experimentel and Unsecure}
+If your Mail server has an self signed certificate, you can pass the check, if the certificate on the mail server is valid.
+ This is experimental and should only be used for testing purpose.
+{warn}
+ 
+  
