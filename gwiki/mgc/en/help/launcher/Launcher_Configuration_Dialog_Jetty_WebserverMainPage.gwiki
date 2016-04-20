@@ -3,7 +3,7 @@ Configure the applications Webserver 
 {pageintro}
  
 {toc}
- 
+h2. Dialog
 h3. Server Port
 The Port number, where the Jetty Webserver will accept HTTP Requests.
  The standard port number for HTTP Request is 80. Often this port is already used or you have not the permission to listen to this port (need adminstration/root rights). 
@@ -47,12 +47,66 @@ h3. Truststore Password
 Password to open the Truststore file. If you have no Truststore, same as in Keystore password.
 h3. Cert Alias
 Because one Keystore can contain multiple certificates, the certificate has to be addressed by its alias.
-h2. Generate Selfsigned Certificate
+h3. Generate Selfsigned Certificate
 If you have no SSL certificate you can generate your own cerficicate. Put in the SSL fields above the values (Paths and Passwords) which should be used to generate the SSL certificate.
 {warn:title=Test only}
 Self signed cerficate are not secure, because there is no proof, that the URL the user open in the Browser matches with the cerficate.
-(But it is still better as using plain HTTP, because all traffic \- including passwords \- are passed in clear text in HTTP.
-Use this only for Testing. 
+ (But it is still better as using plain HTTP, because all traffic \- including passwords \- are passed in clear text in HTTP.
+ Use this only for Testing. 
 {warn}
- 
- 
+h2. Configuration Properties
+Sample:
+{code:lang=markup}
+#Port the server listened
+genome.jetty.port=8089
+
+#Hostname/IP to listen. If empty listen to all
+genome.jetty.listenHost=
+
+#subpath the application will running (part of the url)
+genome.jetty.contextpath=/mgc
+
+#Url the application is reachable
+genome.jetty.publicUrl=http://localhost:8089/mgc
+
+#Session timout in seconds
+genome.jetty.sessionTimeout=3600
+
+#If enabled JMX will be enabled
+genome.jetty.jmx.enabled=false
+
+#If enabled all request will be logged into local filesystem
+genome.jetty.requestlogging.enabled=true
+
+#Use server with HTTPS
+genome.jetty.sslEnabled=false
+
+#Port number for HTTPS
+genome.jetty.sslPort=8883
+
+#Use only HTTPS (no HTTP)
+genome.jetty.sslOnly=false
+
+#Location of your SSL Keystore
+genome.jetty.sslKeystorePath=keystore
+
+#Password for the SSL Keystore
+genome.jetty.sslKeystorePassword=genomegwiki
+
+#Password for the SSL Keystore
+genome.jetty.sslKeyManagerPassword=genomegwiki
+
+#Path to trust store
+genome.jetty.trustStorePath=keystore
+
+#Password trust store
+genome.jetty.trustStorePassword=genomegwiki
+
+#Alias used from inside the key store
+genome.jetty.sslCertAlias=gwiki
+
+#Alias to public url
+cfg.public.url=http://localhost:8089/mgc
+{code}
+h2. 
+  

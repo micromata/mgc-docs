@@ -12,12 +12,12 @@ Micromata develops individual Software for enterprises. For critical Applicati
 h1. Resources
 {table:class=gwikiTable}
 {tr}
-{th:class=gwikith}Maven Repo{th}{td:class=gwikitd}Releases: https://labs.micromata.de/nexus/content/repositories/MGC
- Snapshots: https://labs.micromata.de/nexus/content/repositories/MGC\-snapshot{td}
+{th:class=gwikith}Maven Repo{th}{td:class=gwikitd}Releases: [https://labs.micromata.de/nexus/content/repositories/MGC|https://labs.micromata.de/nexus/content/repositories/MGC|target=_blank]
+ Snapshots: [https://labs.micromata.de/nexus/content/repositories/MGC-snapshot|https://labs.micromata.de/nexus/content/repositories/MGC-snapshot|target=_blank]{td}
 {tr}{tr}
 {th:class=gwikith}GIT{th}{td:class=gwikitd}TODO{td}
 {tr}{tr}
-{th:class=gwikith}JIRA{th}{td:class=gwikitd}TODO{td}
+{th:class=gwikith}JIRA{th}{td:class=gwikitd}[https://labs.micromata.de/jira/projects/MGC|https://labs.micromata.de/jira/projects/MGC|target=_blank]{td}
 {tr}
 {table}
  

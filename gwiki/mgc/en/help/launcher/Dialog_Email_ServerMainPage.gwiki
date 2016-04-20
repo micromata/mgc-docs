@@ -2,6 +2,8 @@
 If the application want to send emails, you have to configure the email SMPT server.
 {pageintro}
  
+h2. Dialog
+ 
 !mgc/en/help/launcher/EmailServerDialog.png!
 h3. Standard sender Email
 The Email the application used as default sender address for sending emails.
@@ -10,15 +12,50 @@ If enabled a MailSession will be configured and is available via JNDI.
   
 h3. SMPT Host and Port
 Provide Hostname and Port of the SMPT server.
-Select also the encryption method.
+ Select also the encryption method.
 {warn:title=Security}
 Using Plain the user/password will be transfered as plain text to the email server. Use this only, if your email server is on localhost. 
 {warn}
+ 
 h3. Authentification
 If your SMPT server needs authentification, provide user name and password.
 {warn:title=Security}
 Using plain SMPT with Authentification is dangerous, because user name and password are passed as plain text through the internet. 
 {warn}
-h2. Send test Email
-With this button you can test the email server settings and sending an email to a given email receiver.
  
+h3. Send test Email
+With this button you can test the email server settings and sending an email to a given email receiver.
+  
+h2. Configuration Properties
+The keys may differ on the applications.
+The pattern for a mail session configuration is:
+{{mail.session.<name>.name=<name>}}
+Sample:
+{code:lang=markup}
+mail.session.gwikimailsession.name=gwikimailsession
+mail.session.gwikimailsession.emailEnabled=false
+
+#A standard sender email address. The application may use another one
+mail.session.gwikimailsession.standardEmailSender=
+
+#Mail protocol: Plain, StartTLS,SSL
+mail.session.gwikimailsession.encryption=Plain
+
+#Hostname of the email server
+mail.session.gwikimailsession.smtp.host=localhost
+
+#Port number of the email server
+mail.session.gwikimailsession.smtp.port=25
+
+#The email server needs authentification
+mail.session.gwikimailsession.smtp.auth=false
+
+#Authentification by user name
+mail.session.gwikimailsession.smtp.user=
+
+#Users password
+mail.session.gwikimailsession.smtp.password=
+jndi.bind.gwikimailsession.target=java:/comp/env/gwiki/mail/mailSession
+jndi.bind.gwikimailsession.type=MailSession
+jndi.bind.gwikimailsession.source=gwikimailsession
+{code}

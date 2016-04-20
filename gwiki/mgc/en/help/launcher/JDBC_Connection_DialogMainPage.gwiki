@@ -1,9 +1,10 @@
 {pageintro}
 With the JDBC Connection Dialog you can configure a database connection, which is published by JNDI
 {pageintro}
+h2. Dialog
 The JDBC dialog may be shown standalone or embedded in other configuration dialogs.
 !mgc/en/help/launcher/JdbcDialog.png!
- 
+  
 h3. JDBC Driver
 Select a JDBC Driver to be used by the application to create an DB\-Connection
 h3. JDBC URL
@@ -27,5 +28,66 @@ h3. Validation Query
 A SQL Statement which should be used to check if connection is still valid
 h3. Validation Query Timeout
 How many seconds the Validation Query can be take, until the connection considered not ok.
+  
+h2. Configuration properties
+The used configuration keys depends on the application. 
+The pattern is:
+{{db.ds.<connectionname>.drivername}}
+Sample:
+{code:lang=markup}
+#JDBC Java class
+db.ds.genomelog.drivername=org.apache.derby.jdbc.EmbeddedDriver
+
+#Database user
+db.ds.genomelog.username=
+
+#Database password for given user
+db.ds.genomelog.password=
+
+#JDBC url to connect to DB
+db.ds.genomelog.url=jdbc:derby:genomelog-derby
+db.ds.genomelog.extendedSettings=false
+
+#Sets the maximum number of active connections that can be allocated at the same time.
+#Use a negative value for no limit.
+db.ds.genomelog.maxActive=8
+
+#Sets the maximum number of connections that can remain idle in the pool.
+db.ds.genomelog.maxIdle=8
+
+# Sets the minimum number of idle connections in the pool.
+db.ds.genomelog.minIdle=0
+
+#Max waiting while obtaining connection. Use -1 to make the pool wait indefinitely.
+db.ds.genomelog.maxWait=-1
+
+#Sets the initial size of the connection pool.
+db.ds.genomelog.intialSize=0
+
+#Sets the default catalog.
+db.ds.genomelog.defaultCatalog=
+
+#Sets default auto-commit state of connections returned by this datasource.
+db.ds.genomelog.defaultAutoCommit=
+
+#Validation query to test if connection is valid.
+db.ds.genomelog.validationQuery=
+
+#Sets the validation query timeout, the amount of time, in seconds, that connection validation will wait for a response from the database when  executing a validation query.  
+#Use a value less than or equal to 0 for  no timeout.
+db.ds.genomelog.validationQueryTimeout=-1
+
+#Intern name of of the jndi
+jndi.bind.genomelog.name=genomelog
+
+#type of the jndi target value
+jndi.bind.genomelog.type=DataSource
+
+#reference to the source of the jndi target value
+jndi.bind.genomelog.source=genomelog
+
+#JNDI name published the jndi value
+jndi.bind.genomelog.target=java:/comp/env/genome/jdbc/dsLogging
+{code}
  
  

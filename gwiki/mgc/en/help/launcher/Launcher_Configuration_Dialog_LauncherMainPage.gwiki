@@ -1,15 +1,30 @@
 {pageintro}
 Configure the Launcher main window. 
 {pageintro}
- 
-h2. Window Settings
+h2. Dialog
+h3. Window Settings
 Controls if the Launcher main window starts
 * Normal
 * Minimized
 * Hidden
 The Hidden option is only available on Windows system, which has a notification bar.
-h2. Start Server at startup
+h3. Start Server at startup
 If checked, the Application will be started immediatelly after starting the Launcher.
-h2. Open Browser at startup
+h3. Open Browser at startup
 If checked the Launcher will open a Browser window, after application is started.
+h2. Configuration properties
+Sample:
+{code:lang=markup}
+windowSettings=Normal
+
+#Starting application also starts server
+startServerAtStartup=false
+
+#Starting the server will open a browser window
+startBrowserOnStartup=false
+
+#Enable LF5 Viewer in Main window
+enableLF5=false
+{code}
+h3. 
   
