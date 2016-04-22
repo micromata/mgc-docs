@@ -2,8 +2,23 @@
 TPSB is a testframework to write readable unit tests. 
 {pageintro}
  
-{todo:title=Continue}
+h1. Resources
+{table:class=gwikiTable}
+{tr}
+{th:class=gwikith}Maven Repo{th}{td:class=gwikitd}Releases: [https://labs.micromata.de/nexus/content/repositories/TPSB|https://labs.micromata.de/nexus/content/repositories/TPSB|class=gwikiGlobalLink|target=_blank]
+ Snapshots: [https://labs.micromata.de/nexus/content/repositories/TPSB-snapshot|https://labs.micromata.de/nexus/content/repositories/TPSB-snapshot|class=gwikiGlobalLink|target=_blank]{td}
+{tr}{tr}
+{th:class=gwikith}GIT{th}{td:class=gwikitd}https://github.com/micromata/tpsb{td}
+{tr}{tr}
+{th:class=gwikith}JIRA{th}{td:class=gwikitd}[https://labs.micromata.de/jira/projects/TPSB|https://labs.micromata.de/jira/projects/TPSB|class=gwikiGlobalLink|target=_blank]{td}
+{tr}
+{table}
  
-{todo}
+h1. Support
+Please your Jira Ticket [https://labs.micromata.de/jira/projects/TPSB|https://labs.micromata.de/jira/projects/TPSB|class=gwikiGlobalLink|target=_blank] for bug reports.
+h1. License
+TPSB is released unter the Apache 2.0 License. See [https://www.apache.org/licenses/LICENSE-2.0.html|https://www.apache.org/licenses/LICENSE-2.0.html|class=gwikiGlobalLink]
+ 
+h1. Documentation
  
 {children:withPageIntro=true|type=gwiki}
