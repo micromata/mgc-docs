@@ -3,6 +3,7 @@ Configure the applications Webserver 
 {pageintro}
  
 {toc}
+ 
 h2. Dialog
 h3. Server Port
 The Port number, where the Jetty Webserver will accept HTTP Requests.
@@ -15,6 +16,8 @@ Depending on the deployed application, you should not change context path, or ma
 The context path the application should be deployed. 
 h3. Public URL
 The public URL the application can be reached by the browser. If your application is served via a proxy, this URL may diver from local machine name and Server Port.
+h3. Session timeout
+If you application creates sessions, how long an inactive used session should last in seconds.
 h3. Listen on IP
 By default (empty value), the Jetty Server accepts HTTP request from all networks of the host. Because of security reasons you want, that the server only listen on a single network interface. If you select 127.0.0.1 (IP4) or 0:0:0:0:0:0:0:1 (IP6) the application only accepts calls from localhost.
 h3. JMX
@@ -54,6 +57,7 @@ Self signed cerficate are not secure, because there is no proof, that the URL th
  (But it is still better as using plain HTTP, because all traffic \- including passwords \- are passed in clear text in HTTP.
  Use this only for Testing. 
 {warn}
+ 
 h2. Configuration Properties
 Sample:
 {code:lang=markup}
@@ -108,5 +112,6 @@ genome.jetty.sslCertAlias=gwiki
 #Alias to public url
 cfg.public.url=http://localhost:8089/mgc
 {code}
-h2. 
-  
+ 
+h2.  
+ 

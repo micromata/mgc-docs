@@ -5,9 +5,9 @@
 h1. About
 Micromata develops individual Software for enterprises. For critical Application a collection of solutions are shared. 
 {*}MGC{*} is collection of Libraries, which is part of the In\-House\-Product {*}[Genome|https://www.micromata.de/leistungen-und-produkte/genome/|target=_blank]{*} which is an Application Management System based on OSGi for Web applications.
- The MGC Libraries are also used in the OpenSource projects:
-\- [ProjectForge|www.projectforge.org]
- \- [GWiki|https://labs.micromata.de/projects/gwiki.html]
+The MGC Libraries are also used in the OpenSource projects:
+* [ProjectForge|www.projectforge.org]
+* [GWiki|https://labs.micromata.de/projects/gwiki.html]
   
 h1. Resources
 {table:class=gwikiTable}

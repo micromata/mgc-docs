@@ -1,0 +1,22 @@
+ 
+{pageintro}
+Help about the usage of the Log Window
+{pageintro}
+ 
+h2. Help about the Logging page
+!mgc/en/LogWindowSample.png! 
+  
+ The Log page works on two ways:
+*Live Update*
+ New Logs will automatically appended to the list of log entries at top.
+*Search*
+ If you search for a log entry, the live update will be disabled and the logs displayed are the result of the search. Click Life Update again, if you want to see live new entries.
+  
+*Page*
+ Number of items shown on the first page. If you search for log entries, you can also click on the next page link at the button of the log entry list to show more found items.
+*Buffer*
+ The Log Page itself buffers a number of Logentries. If your Logging backend doesn't support search, the items in the buffer will be filtered on clicking the search button.
+h3. Filter options
+The filter options filters the live incoming logs for displaying in the log page as well if you use search to look on logs in persisted logs.
+  
+  

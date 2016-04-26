@@ -1,0 +1,42 @@
+ 
+{pageintro}
+To view MGC Logging in a webpage, a small html page with ajax calls and a servlet are provided.
+ In Genome use the Logging from the GenomeConsole.
+{pageintro}
+ 
+If you want to embed a Logging window in to your web application you have to use following resources.
+h2. Resources
+h3. glogviewerform.html
+Form definition of the Logging. Copy (and may modify) this html in your Logging window HTML code. 
+ You may change style, and add other elements, but keep input names and ids, because the Javascript relies on stable names.
+h3. loggingweb.css
+Use, modify or integrate css definitions.
+h3. glogviewer.js, glogform.js, glogbackend.js
+Javascript, which handles the form and backend calls.
+h3. de.micromata.genome.logging.loghtmlwindow.LogHtmlWindowServlet
+You have to create your own servlet derived from {{LogHtmlWindowServlet}}. Main purpose of your own implementation is to handle authentification. Because Logging contains sensible information, make sure, that only administrator can view the Log page and allowed to calling {{LogHtmlWindowServlet.}}
+h2. Put it together
+In your HTML initilize Logging
+{code:lang=javascript}
+<script type="text/javascript">
+<!--
+var logBackedUrl = '/loghtml';
+var logViewer = new GLogViewer({
+  logListId : 'glogentries',
+  formId : 'glogform',
+  backendUrl : logBackedUrl,
+  maxItems : 100,
+  logPollTimeout : 1000
+
+});
+$(document).ready(function() {
+	$.datetimeEntry.setDefaults({spinnerImage: '<gwiki:url value="/static/js/datetimeentry-2.0.0/spinnerDefault.png" />'});
+	$('#glogFromDateText').datetimeEntry({datetimeFormat: 'Y-O-D H:M:S'});
+	$('#glogToDateText').datetimeEntry({datetimeFormat: 'Y-O-D H:M:S'});
+});
+//-->
+</script>
+{code}
+ 
+ The logBackedUrl has to point to your {{LogHtmlWindowServlet}}.
+  
