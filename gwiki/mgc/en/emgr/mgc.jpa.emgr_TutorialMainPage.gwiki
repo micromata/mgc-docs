@@ -1,11 +1,9 @@
 {pageintro}
 Small to tutorial how to create an persistence context.
 {pageintro}
-
 h1. Step 1. Create an persistence.xml
-In your project create a standard JPA persistence.xml at the localation {{src/main/resources/META-INF}}.
-
-{code}
+In your project create a standard JPA persistence.xml at the localation {{src/main/resources/META\-INF}}.
+{code:lang=java}
 <?xml version='1.0' encoding='UTF-8'?>
 <persistence xmlns='http://java.sun.com/xml/ns/persistence' xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'
   xsi:schemaLocation='http://java.sun.com/xml/ns/persistence http://java.sun.com/xml/ns/persistence/persistence_1_0.xsd'
@@ -17,15 +15,12 @@ In your project create a standard JPA persistence.xml at the localation {{src/ma
   </persistence-unit>
 </persistence>
 {code}
-
 - {{de.micromata.genome.jpa.test}}: is the name of the persistence context. This has to be unique in your project
 - {{java:/comp/env/genome/jdbc/dsWeb}}: Refers to the JNDI name for the DataSource. You can use LocalSettings to declare datasource and JNDI context.
-- {{<exclude-unlisted-classes>false</exclude-unlisted-classes>}}: Scan all classes. Alternativelly list the entity classes.
-
+- {{<exclude\-unlisted\-classes>false</exclude\-unlisted\-classes>}}: Scan all classes. Alternativelly list the entity classes.
+ 
 h1. Step 2. Create your EmgrFactory
-
-{code}
-
+{code:lang=java}
 public class JpaTestEntMgrFactory extends EmgrFactory<JpaTestEntMgr>
 {
   // An EmgrFactory has to be singlton
@@ -58,11 +53,9 @@ public class JpaTestEntMgrFactory extends EmgrFactory<JpaTestEntMgr>
   }
 }
 {code}
-
 h1. Step 3 Use it
-
 Yes, that is it basically.
-{code}
+{code:lang=java}
 public class JpaDemoTest extends MgcTestCase
 {
   static JpaTestEntMgrFactory emfac = JpaTestEntMgrFactory.get();
@@ -95,6 +88,5 @@ public class JpaDemoTest extends MgcTestCase
   }
 }
 {code}
-
 h1. Further Readings
-[mgc/en/mgc.jpa.emgr_Transaction]
+[mgc/en/emgr/emgc.jpa.emgr_Transaction]
