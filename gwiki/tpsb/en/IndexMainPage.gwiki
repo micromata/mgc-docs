@@ -1,5 +1,6 @@
 {pageintro}
 TPSB is a testframework to write readable unit tests. 
+TPSB was originally developed in a research project "Test\- und Prototypgenerierung aus Szenarien für hochagile Businessprozesse".
 {pageintro}
  
 h1. Resources
@@ -18,7 +19,7 @@ h1. Support
 Please your Jira Ticket [https://labs.micromata.de/jira/projects/TPSB|https://labs.micromata.de/jira/projects/TPSB|class=gwikiGlobalLink|target=_blank] for bug reports.
 h1. License
 TPSB is released unter the Apache 2.0 License. See [https://www.apache.org/licenses/LICENSE-2.0.html|https://www.apache.org/licenses/LICENSE-2.0.html|class=gwikiGlobalLink]
- 
+  
 h1. Documentation
  
 {children:withPageIntro=true|type=gwiki}
