@@ -1,0 +1,57 @@
+{pageintro}
+MGC Logging is used for Logging business processes, rather than for technical logging
+{pageintro}
+ 
+h1. Usage
+Normal logging frameworks (like, java.util.logging, Log4J, etc.pp.) are used to write loggings for tracing error and technical traces.
+ MGC Logging is designed to log business errors, transactions and traces.
+ The MGC logging framework has following purposes:
+ Protocol
+* Error situations with context information
+* Performance of the application
+* Call of external interfaces
+* Data for later usage in monitoring and statistics
+* important steps in business transaction
+* Actions of support and system administration
+ 
+h2. Hello world
+{code:lang=java}
+import org.junit.Test;
+
+import de.micromata.genome.logging.GLog;
+import de.micromata.genome.logging.GenomeLogCategory;
+
+public class BaseLoggingTest
+{
+  @Test
+  public void testLog()
+  {
+    GLog.note(GenomeLogCategory.UnitTest, "A Log");
+  }
+}
+{code}
+h1.  Basic Elements
+ 
+{todo}
+Translate
+{todo}
+Ein Logeintrag enthält folgende Standardfelder:
+* Millisekundengenauer Zeitstempel
+* LogLevel: z. B. Error für einen unerwarteten Fehler, Note für wichtige fachliche Logs
+* Category: Zu welcher Domäne gehört diese Log\-Nachricht?
+* Kurznachricht (indiziert)
+* Langnachricht (nicht indiziert)
+* Indizierte technische Attribute (z. B. Request\-URL, Session\-ID)
+* Indizierte fachliche Attribute wie etwa Username, VAdmin\-Name, Vertragsnummer, Anwendungsname etc.
+Die Loglevel haben folgende Bedeutung:
+* Fatal: Wenn dieser Fehler auftritt, ist ein weiteres Funktionieren der Anwendung nicht mehr gegeben.
+* Error: Fehler innerhalb der Anwendung, ihrer Konfiguration oder in der Kommunikation (falsche Daten) mit externen Schnittstellen
+* Warn: Fehler in der Kommunikation mit externen Schnittstellen oder den Nutzereingaben
+* Note: wichtige Prozessschritte innerhalb der Anwendung
+* Info: nicht so wichtige Prozessschritte innerhalb der Anwendung
+* Trace: Mit Trace wird jede Kommunikation oder jeder Prozessschritt protokolliert (jeder HTTP\-Request)
+* Debug: Informationen, die im Wesentlichen für die Entwicklung und Fehleranalyse von Interesse sind
+Die Anwendung sollte im Normalfall mit dem minimalen Loglevel Note betrieben werden.
+ Niedrigere Loglevels können die Performance der Anwendung beeinträchtigen.
+ Zusätzlich können zu einem Logeintrag erweiterte Attribute gespeichert werden. Diese können weitere Informationen enthalten, für die kein spezielles fachliches oder technisches Attribut vorgesehen ist. Bei Fehlersituationen können hier auch weitere Kontextinformationen gespeichert werden, wie etwa fehlgeschlagenes SQL\-Statement, Javastacktrace, User\- bzw. Sessiondump in Form von XML.
+ Die Lognachrichten werden innerhalb des Quellcodes analog zu Javadockommentaren dokumentiert und dann extrahiert, so dass es zu jedem Logeintrag eine entsprechende Dokumentation gibt.

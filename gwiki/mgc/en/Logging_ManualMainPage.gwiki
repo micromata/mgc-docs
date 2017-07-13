@@ -1,0 +1,4 @@
+{pageintro}
+Developers Manual for using MGC Logging
+{pageintro}
+{children:withPageIntro=true|type=gwiki}

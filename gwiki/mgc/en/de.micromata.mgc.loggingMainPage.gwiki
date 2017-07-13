@@ -2,6 +2,7 @@
 Different to traditional log frameworks like log4j Genome Logging is specialized for business and ops logging.
 {pageintro}
  
+{children:withPageIntro=true|type=gwiki}
 {todo:title=Write me, translate me from internal german documents}
  
 {todo}
