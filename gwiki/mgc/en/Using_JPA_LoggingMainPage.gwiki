@@ -1,0 +1,24 @@
+{pageintro}
+MGC Logging can write into a relational database to make log entries more accessible.  
+{pageintro}
+ 
+h1. Project Dependencies
+You need to include following in your dependencies:
+ 
+{code:lang=markup}
+<dependencies>
+    <dependency>
+      <groupId>de.micromata.mgc</groupId>
+      <artifactId>de.micromata.mgc.jpa.logging</artifactId>
+      <version>${mgc.version}</version>
+    </dependency>
+</dependencies>
+{code}
+ 
+h1. Database
+MGC Logging uses JPA with Hibernate as implementation.
+JPA uses Datasource and Properties to initialize.
+ 
+If you use the standard Logging Schema you can use
+ 
+ LoggingServiceManager.get().setLogging(new GenomeJpaLoggingImpl());
