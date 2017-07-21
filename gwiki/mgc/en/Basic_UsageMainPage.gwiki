@@ -5,22 +5,22 @@ Basic usage with Standard Implementation and Standard attributes.
 h1.  
 Make a Project
  Add the dependency to your project.
- Please refer to [mgc/en/de.micromata.mgc.common] for required maven dependencies an maven reposity URLs.
+ Please refer to [mgc/en/de.micromata.mgc.common] for required maven dependencies and maven reposity URLs.
   
 {code:lang=markup}
 <dependency>
-      <groupId>de.micromata.mgc</groupId>
-      <artifactId>de.micromata.mgc.logging</artifactId>
-      <version>2.4.0</version>
-    </dependency>
+    <groupId>de.micromata.mgc</groupId>
+    <artifactId>de.micromata.mgc.logging</artifactId>
+    <version>2.4.0</version>
+</dependency>
 {code}
 Look for the current version.
- 
+  
 h2. Configuration for default log4j Consumer
 If nothing different is configured, Log4J will be used to write the logs. If you want to see something, you have to provide a Log4J configuration.
-Put a log4j.properties in your class Path.
-Sample for a unittest
-src/test/resoruces/log4j.properties
+ Put a log4j.properties in your class Path.
+ Sample for a unittest
+ src/test/resources/log4j.properties
 {code:lang=markup}
 log4j.rootCategory=INFO, A1
 log4j.logger.de.micromata.genome.logging=DEBUG
@@ -31,7 +31,7 @@ log4j.appender.A1.layout=org.apache.log4j.PatternLayout
 log4j.appender.A1.layout.ConversionPattern=T=[%d] F=[%C{1}] L=[%p] X=[%x] M=[%m]%n
 {code}
  
-A very simple log.
+ A very simple log.
 {code:lang=java}
 import org.junit.Test;
 

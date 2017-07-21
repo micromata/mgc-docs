@@ -1,24 +1,164 @@
 {pageintro}
-MGC Logging can write into a relational database to make log entries more accessible.  
+MGC Logging can write into a relational database to make log entries more accessible. 
 {pageintro}
  
 h1. Project Dependencies
-You need to include following in your dependencies:
- 
+Create a Maven Project with your preferred IDE.
+ You can use following pom\-File:
+  
 {code:lang=markup}
-<dependencies>
-    <dependency>
-      <groupId>de.micromata.mgc</groupId>
-      <artifactId>de.micromata.mgc.jpa.logging</artifactId>
-      <version>${mgc.version}</version>
-    </dependency>
-</dependencies>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>de.micromata.mgc.samples</groupId>
+    <artifactId>de.micromata.mgc.jpa.logging.sample</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
+    <packaging>jar</packaging>
+    <description>
+        Sample to use jpa.
+    </description>
+    <properties>
+        <mgc.version>2.5.0</mgc.version>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>de.micromata.mgc</groupId>
+            <artifactId>de.micromata.mgc.jpa.logging</artifactId>
+            <version>${mgc.version}</version>
+        </dependency>
+        <!--  LocalSettingsEnv.get(); needs this dependency. If you have no container which provides
+        javax.mail.Session you have to add it here -->
+        <dependency>
+            <groupId>javax.mail</groupId>
+            <artifactId>mail</artifactId>
+            <version>1.5.0-b01</version>
+        </dependency>
+        <!--  the database driver -->
+        <dependency>
+            <groupId>org.apache.derby</groupId>
+            <artifactId>derby</artifactId>
+            <version>10.12.1.1</version>
+        </dependency>
+    </dependencies>
+    
+    <repositories>
+        <!-- public repository-->
+        <repository>
+            <id>MGC</id>
+            <name>MGC</name>
+            <url>https://labs.micromata.de/nexus/content/repositories/MGC/</url>
+        </repository>
+        <!-- public repository-->
+        <repository>
+            <id>MGC-snapshot</id>
+            <name>MGC-snapshot</name>
+            <url>https://labs.micromata.de/nexus/content/repositories/MGC-snapshot/</url>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+        </repository>
+    </repositories>
+</project>
+{code}
+ See https://labs.micromata.de/nexus/\#nexus\-search;quick\~mgc to set <mgc.version>...</mgc.version> to newest version of MGC.
+h1. log4j.properties
+If nothing different is configured, Log4J will be used to write the logs. If you want to see something, you have to provide a Log4J configuration.
+ Put a log4j.properties in your classpath.
+ Put your log4j.properties file in
+ src/main/resources/log4j.properties
+  
+h1. local\-settings.properties
+Put a local\-settings.properties file in root folder of your application. If you use database in file, a folder with name 'databaseFileName' is created also in root folder.
+{code:lang=markup}
+# bind Datasource to JDNI
+jndi.bind.logging.target=java:comp/env/genome/jdbc/dsLogging
+jndi.bind.logging.type=DataSource
+jndi.bind.logging.source=localderby
+
+
+# Define Datasource 
+db.ds.localderby.name=localderby
+db.ds.localderby.drivername=org.apache.derby.jdbc.EmbeddedDriver
+db.ds.localderby.username=
+db.ds.localderby.password=
+
+# Use this for database in file
+db.ds.localderby.url=jdbc:derby:databaseFileName;create=true
+
+# Use this for database in memory
+#db.ds.localderby.url=jdbc:derby:memory:myDB;create=true
+
+
+## Hibernate settings
+# automatic create schema
+hibernate.hbm2ddl.auto=update
+hibernate.dialect=org.hibernate.dialect.DerbyDialect
+
+# hibernate settings for diagnose
+hibernate.show_sql=false
+hibernate.format_sql=true
 {code}
  
 h1. Database
 MGC Logging uses JPA with Hibernate as implementation.
-JPA uses Datasource and Properties to initialize.
- 
-If you use the standard Logging Schema you can use
- 
- LoggingServiceManager.get().setLogging(new GenomeJpaLoggingImpl());
+ JPA uses Datasource and Properties to initialize.
+ If you use the standard Logging Schema you can use
+{code:lang=java}
+LoggingServiceManager.get().setLogging(new GenomeJpaLoggingImpl());
+{code}
+
+  
+h1. Javacode
+{code:lang=java}
+package de.micromata.mgc.jpa.logging.sample;
+
+import java.sql.Timestamp;
+import java.util.Date;
+import java.util.List;
+
+import de.micromata.genome.db.jpa.logging.GenomeJpaLoggingImpl;
+import de.micromata.genome.logging.CollectLogEntryCallback;
+import de.micromata.genome.logging.GLog;
+import de.micromata.genome.logging.GenomeLogCategory;
+import de.micromata.genome.logging.LogEntry;
+import de.micromata.genome.logging.LoggingServiceManager;
+import de.micromata.genome.util.runtime.LocalSettingsEnv;
+
+/**
+ * Sample for Logging into a database.
+ * 
+ * Please refer also to the local-settings.properties, where you can find database settings.
+ * 
+ * @author Roger Rene Kommer (r.kommer.extern@micromata.de), Hendrik Preuss (h.preuss@micromata.de)
+ *
+ */
+public class JpaLoggingExample
+{
+  public static void main(String[] args)
+  {
+    // do this in your main.
+    // it looks for local-settings.properties in your working directory.
+    // If you use IntelliJ, and debug this, please make sure, application has correct working directory.
+    // ensure env is initialized.
+    LocalSettingsEnv.get();
+    // set jpa logging
+    LoggingServiceManager.get().setLogging(new GenomeJpaLoggingImpl());
+
+    GLog.note(GenomeLogCategory.UnitTest, "My First Message");
+
+    // now look, if we can find it in the database.
+    CollectLogEntryCallback collectLogEntryCallback = new CollectLogEntryCallback();
+
+    // use later to select logs
+    Timestamp timestampOfLogging = new Timestamp(new Date().getTime());
+
+    LoggingServiceManager.get().getLogging().selectLogs(timestampOfLogging, null, null, null, null, null, 0, 30, null,
+        false, collectLogEntryCallback);
+    List<LogEntry> logEntries = collectLogEntryCallback.getEntries();
+    for (LogEntry logEntry : logEntries) {
+      System.out.println("Got from MGC Logging Database. Message: " + logEntry.getMessage());
+    }
+  }
+}
+{code}

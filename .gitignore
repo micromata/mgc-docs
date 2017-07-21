@@ -4,3 +4,5 @@
 .fslock
 log
 gwiki/tmp
+.idea/
+*.iml
